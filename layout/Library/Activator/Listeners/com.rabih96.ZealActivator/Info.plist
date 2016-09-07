@@ -1,0 +1,6 @@
+{
+	title = "Zeal";
+	description = "Trigger the battery alert";
+	"compatible-modes" = ("springboard", "application");
+}
+

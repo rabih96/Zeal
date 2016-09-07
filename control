@@ -1,0 +1,9 @@
+Package: com.rabih96.Zeal
+Name: Zeal
+Depends: mobilesubstrate
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: An awesome MobileSubstrate tweak!
+Maintainer: Rabih M.
+Author: Rabih M.
+Section: Tweaks
