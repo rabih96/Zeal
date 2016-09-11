@@ -118,13 +118,13 @@ static UIScrollView *flipSwitchScrollView;
 	[self.view addSubview:lineView];
 
 	CGSize size = self.view.bounds.size;
-	closeButton.frame = CGRectMake(0, size.height-30, size.width, 20);
-	brightnessSlider.frame = CGRectMake(30, closeButton.frame.origin.y-70-60, size.width-60, 50.0);
-	powerSavingButton.frame = CGRectMake(20, brightnessSlider.frame.origin.y-40, size.width-40, 30);
-	lineView.frame = CGRectMake(0, brightnessSlider.frame.origin.y, size.width, 0.5);
-	lineView2.frame = CGRectMake(0, brightnessSlider.frame.origin.y+brightnessSlider.frame.size.height, size.width, 0.5);
-	lowBright.frame = CGRectMake(5,brightnessSlider.frame.origin.y+15,20,20);
-	highBright.frame = CGRectMake(size.width-25,brightnessSlider.frame.origin.y+15,20,20);
+
+	brightnessSlider.frame = CGRectMake(30, 50, size.width-60, 50.0);
+	powerSavingButton.frame = CGRectMake(20, 10, size.width-40, 30);
+	lineView.frame = CGRectMake(0, 50, size.width, 0.5);
+	lineView2.frame = CGRectMake(0, 100, size.width, 0.5);
+	lowBright.frame = CGRectMake(5, 65, 20, 20);
+	highBright.frame = CGRectMake(size.width-25, 65, 20, 20);
 
 	powerSavingButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	[powerSavingButton setTitle:([powerSaver getPowerMode] == 1) ? @"Deactivate battery saving mode" : @"Activate battery saving mode" forState:UIControlStateNormal];
@@ -142,7 +142,8 @@ static UIScrollView *flipSwitchScrollView;
 		int i = 1;
 		for(NSString *identifier in enabledSwitchesArray) {
 			UIButton *flipSwitchButton = [flipSwitchPanel buttonForSwitchIdentifier:identifier usingTemplate:templateBundle];
-			flipSwitchButton.frame = CGRectMake(calculateXPositionForAppNumber(i,size.width), size.height-30-(AppIconSize/2)-5, AppIconSize, AppIconSize);
+			flipSwitchButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+			flipSwitchButton.frame = CGRectMake(calculateXPositionForAppNumber(i,size.width), 112.5, AppIconSize, AppIconSize);
 			[self.view addSubview:flipSwitchButton];
 			if(i == AppsPerRow) break;
 			i++;
@@ -157,27 +158,22 @@ static UIScrollView *flipSwitchScrollView;
 	[lineView2 removeFromSuperview];
 	[closeButton removeFromSuperview];
 	[brightnessSlider removeFromSuperview];
-	//[flipSwitchScrollView removeFromSuperview];
 }
 
 - (void)viewDidLayoutSubviews{
 	%orig;
 	CGSize size = self.view.bounds.size;
-	closeButton.frame = CGRectMake(0, size.height-30, size.width, 20);
-	brightnessSlider.frame = CGRectMake(30, closeButton.frame.origin.y-70-60, size.width-60, 50.0);
-	powerSavingButton.frame = CGRectMake(20, brightnessSlider.frame.origin.y-40, size.width-40, 30);
-	lineView.frame = CGRectMake(0, brightnessSlider.frame.origin.y, size.width, 0.5);
-	lineView2.frame = CGRectMake(0, brightnessSlider.frame.origin.y+brightnessSlider.frame.size.height, size.width, 0.5);
-	lowBright.frame = CGRectMake(5,brightnessSlider.frame.origin.y+15,20,20);
-	highBright.frame = CGRectMake(size.width-25,brightnessSlider.frame.origin.y+15,20,20);
-	flipSwitchScrollView.frame = CGRectMake(0, lineView2.frame.origin.y + 6, size.width, 60);
-	NSArray *enabledSwitchesArray = [[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"];
-	flipSwitchScrollView.contentSize = CGSizeMake( ceil(enabledSwitchesArray.count/(AppsPerRow*1.0))*size.width, flipSwitchScrollView.frame.size.height);
 
+	brightnessSlider.frame = CGRectMake(30, 50, size.width-60, 50.0);
+	powerSavingButton.frame = CGRectMake(20, 10, size.width-40, 30);
+	lineView.frame = CGRectMake(0, 50, size.width, 0.5);
+	lineView2.frame = CGRectMake(0, 100, size.width, 0.5);
+	lowBright.frame = CGRectMake(5, 65, 20, 20);
+	highBright.frame = CGRectMake(size.width-25, 65, 20, 20);
 }
 
 - (CGFloat)preferredContentHeight{
-	return 210.0;
+	return 170.0;
 }
 
 %new
