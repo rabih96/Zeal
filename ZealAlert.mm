@@ -100,6 +100,11 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[[alertView layer] setCornerRadius:20.0f];
 	[[alertView layer] setMasksToBounds:YES];
 	[zealWindow addSubview:alertView];
+	
+	//Adding blurr
+	_UIBackdropView *blurView = [[_UIBackdropView alloc] initWithFrame:CGRectZero autosizesToFitSuperview:YES settings:[[_UIBackdropViewSettings alloc] initWithDefaultValues]];
+	[blurView transitionToPrivateStyle:2030];
+	[alertView addSubview:blurView];
 
 	//Alert icon
 	alertIcon = [[UIImageView alloc] initWithFrame:CGRectMake(15,15,30,30)];
@@ -128,14 +133,15 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[bolt setTintColor:([powerSaver getPowerMode] == 1) ? [UIColor yellowColor] : [UIColor greenColor]];
 	[alertView addSubview:bolt];
 
+	//Power saving button
 	powerSavingButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	powerSavingButton.frame = CGRectMake(15, 65, 280, 30);
 	powerSavingButton.backgroundColor = [UIColor colorWithRed:196.0/255 green:196.0/255 blue:201.0/255 alpha:0.5];
 	powerSavingButton.layer.cornerRadius = 5.0;
 	[powerSavingButton setTitle:([powerSaver getPowerMode] == 1) ? @"Deactivate battery saving mode" : @"Activate battery saving mode" forState:UIControlStateNormal];
 	[powerSavingButton addTarget:self action:@selector(powerSavingMode) forControlEvents:UIControlEventTouchUpInside];
-	[powerSavingButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-	//[powerSavingButton.titleLabel setFont:[UIFont fontWithName:@"HelveticaNeue-Light" size:16.0]];
+	[powerSavingButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+	[powerSavingButton.titleLabel setFont:[UIFont systemFontOfSize:16]];
 	[powerSavingButton setClipsToBounds:YES];
 	[alertView addSubview:powerSavingButton];
 
@@ -205,32 +211,32 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[alertView addSubview:lineView3];
 
 	//Current amperage
-	currentAmps = [[UILabel alloc] initWithFrame:CGRectMake(3, 220, 175, 20)];
-	currentAmps.font = [UIFont systemFontOfSize:12];
+	currentAmps = [[UILabel alloc] initWithFrame:CGRectMake(3, 220, 170, 20)];
+	currentAmps.font = [UIFont systemFontOfSize:11];
 	currentAmps.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	currentAmps.text = dict[@"currentCapacity"];
 	[currentAmps boldSubstring: @"Current Capacity:"];
 	[alertView addSubview:currentAmps];
 
 	//Max amperage
-	maxAmps = [[UILabel alloc] initWithFrame:CGRectMake(3, 240, 175, 20)];
-	maxAmps.font = [UIFont systemFontOfSize:12];
+	maxAmps = [[UILabel alloc] initWithFrame:CGRectMake(3, 240, 170, 20)];
+	maxAmps.font = [UIFont systemFontOfSize:11];
 	maxAmps.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	maxAmps.text = dict[@"maxCapacity"];
 	[maxAmps boldSubstring: @"Max Capacity:"];
 	[alertView addSubview:maxAmps];
 
 	//Battery temperature
-	temprature = [[UILabel alloc] initWithFrame:CGRectMake(180, 220, 130, 20)];
-	temprature.font = [UIFont systemFontOfSize:12];
+	temprature = [[UILabel alloc] initWithFrame:CGRectMake(170, 220, 140, 20)];
+	temprature.font = [UIFont systemFontOfSize:11];
 	temprature.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	temprature.text = [dict objectForKey:@"temprature"];
 	[temprature boldSubstring: @"Temperature:"];
 	[alertView addSubview:temprature];
 
 	//Number of cycles
-	cycles = [[UILabel alloc] initWithFrame:CGRectMake(180, 240, 130, 20)];
-	cycles.font = [UIFont systemFontOfSize:12];
+	cycles = [[UILabel alloc] initWithFrame:CGRectMake(170, 240, 140, 20)];
+	cycles.font = [UIFont systemFontOfSize:11];
 	cycles.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	cycles.text = dict[@"cycleCount"];
 	[cycles boldSubstring: @"Cycles:"];
@@ -256,35 +262,38 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[swiper addGestureRecognizer:tapGesture];
 
 	//Grabber view
-	_grabber = [[NSClassFromString(@"SBControlCenterGrabberView") alloc] initWithFrame:CGRectMake(130, 6, 50, 22)];
+	_grabber = [[NSClassFromString(@"SBChevronView") alloc] initWithFrame:CGRectMake(136, 10, 38, 10)];
 	_grabber.transform = CGAffineTransformMakeRotation(M_PI);
-	[[(SBControlCenterGrabberView *)_grabber chevronView] setState:0 animated:NO];
+	[(SBChevronView *)_grabber setColor:[UIColor whiteColor]];
+	[(SBChevronView *)_grabber setState:0 animated:NO];
 	[_grabber setUserInteractionEnabled:NO];
 	[swiper addSubview:_grabber];
 
 	if(darkMode){
 		messageLabel.textColor = [UIColor whiteColor];
 		titleLabel.textColor = [UIColor whiteColor];
-		alertView.backgroundColor = RGBA(40,40,40,0.9);
-		[(SBControlCenterGrabberView *)_grabber chevronView].color = [UIColor whiteColor];
+		alertView.backgroundColor = RGBA(40,40,40,0.93);
+		[lowBright setTintColor:[UIColor whiteColor]];
+		[brightnessSlider setTintColor:[UIColor whiteColor]];
+		[highBright setTintColor:[UIColor whiteColor]];
 	}else{
 		messageLabel.textColor = [UIColor blackColor];
 		titleLabel.textColor = [UIColor blackColor];
 		alertView.backgroundColor = RGBA(245,245,245,0.975);
-		[(SBControlCenterGrabberView *)_grabber chevronView].color = [UIColor blackColor];
 	}
 
 	//Animation stuff
 	backgroundView.transform = CGAffineTransformMakeScale(1.1, 1.1);
 	alertView.transform = CGAffineTransformMakeScale(1.1, 1.1);
-
 	zealWindow.alpha = 0.0;
-
 	currentAmps.alpha = 0.0;
 	maxAmps.alpha = 0.0;
 	temprature.alpha = 0.0;
 	cycles.alpha = 0.0;
 	lineView4.alpha = 0.0;
+
+	alertView.backgroundColor = [UIColor clearColor];
+
 }
 
 - (void)powerSavingMode{
@@ -305,7 +314,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 
 - (void)swipeGesture:(UIPanGestureRecognizer *)panGestureRecognizer {
 	CGPoint currentPoint = [panGestureRecognizer locationInView:alertView];
-	[[(SBControlCenterGrabberView *)_grabber chevronView] setState:0 animated:YES];
+	[(SBChevronView *)_grabber setState:0 animated:YES];
 
 	if ([panGestureRecognizer state] == UIGestureRecognizerStateChanged) {
 
@@ -342,7 +351,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 				cycles.alpha = 1.0;
 				lineView4.alpha = 0.25;
 			}];
-			[[(SBControlCenterGrabberView *)_grabber chevronView] setState:1 animated:YES];
+			[(SBChevronView *)_grabber setState:1 animated:YES];
 
 		} else {
 
@@ -384,7 +393,6 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 		if(_completion) {
 			_completion();
         }
-		//[(SpringBoard *)[NSClassFromString(@"SpringBoard") sharedApplication] removeWindow];
 	}];
 }
 
