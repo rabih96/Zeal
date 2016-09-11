@@ -7,6 +7,7 @@
 %hook UIApplication
 
 - (id)init{
+
 	[OBJCIPC registerIncomingMessageFromSpringBoardHandlerForMessageName:kOBJCIPCServer1 handler:^NSDictionary *(NSDictionary *message) {
 		NSDictionary *return_message = @{
 			@"currentOrientation" : [NSNumber numberWithLongLong:[[UIApplication sharedApplication] statusBarOrientation]],
@@ -17,7 +18,7 @@
 	return %orig;
 }
 
--(void)setStatusBarOrientation:(UIInterfaceOrientation)orientation animationParameters:(id)arg2 notifySpringBoardAndFence:(BOOL)arg3 updateBlock:(id)arg4 {
+-(void)setStatusBarOrientation:(long long)orientation animationParameters:(id)arg2 notifySpringBoardAndFence:(BOOL)arg3 updateBlock:(/*^block*/id)arg4 {
 	[OBJCIPC sendMessageToSpringBoardWithMessageName:kOBJCIPCServer2 dictionary:@{ @"orientation": [NSNumber numberWithLongLong:orientation] } replyHandler:^(NSDictionary *response) {}];
 	%orig;
 }
