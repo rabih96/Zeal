@@ -1,6 +1,7 @@
 #import "ZealAlert.h"
 #import "Zeal.h"
 #import "UILabel+Bold.h"
+#import "UIAlertView+Blocks.h"
 #import "zealbannerui/FrontBoard.h"
 
 static NSMutableDictionary *extensions;
@@ -10,7 +11,7 @@ static SBBannerController *bannerController;
 static ZealAlert *zealAlert = nil;
 
 static int 			 currentCapacity,	maxCapacity,	instantAmperage,	designCapacity,	cycleCount,	temperature, orient;
-static BOOL 		 active, isCharging, externalConnected,	externalChargeCapable, fullyCharged, enabled, customTMA, customTMB,	customSD, addBU, addS, addB, shouldShowBanner = NO;
+static BOOL 		 darkMode, active, isCharging, externalConnected,	externalChargeCapable, fullyCharged, enabled, customTMA, customTMB,	customSD, addBU, addS, addB, shouldShowBanner = NO;
 static NSInteger 	 batteryLevel = 100, customLevel, bannerMode, bannerTapAction, soundPicked, theme;
 static NSString 	 *titleA, *messageA, *titleB, *messageB, *customTitleA, *customTitleB, *customMessageA, *customMessageB;
 static UIScrollView  *scrollView;
@@ -24,6 +25,9 @@ void loadSettings(){
 
 	NSNumber *enabledKey = prefs[@"enabled"];
 	enabled = enabledKey ? [enabledKey boolValue] : 0;
+
+	NSNumber *darkModeKey = prefs[@"darkMode"];
+	darkMode = darkModeKey ? [darkModeKey boolValue] : 0;
 
 	NSNumber *bannerModeKey = prefs[@"bannerMode"];
 	bannerMode = bannerModeKey ? [bannerModeKey intValue] : 1;
@@ -65,7 +69,21 @@ void loadSettings(){
 	customMessageB = [prefs objectForKey:@"customMessageB"];
 }
 
-static BOOL darkMode(){
+static BOOL isUILocked(){
+	BOOL uiLocked = NO;
+	if (%c(SBLockScreenManager)) {
+		SBLockScreenManager *manager = (SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance];
+		uiLocked = [manager isUILocked];
+	}
+	else if (%c(SBAwayController)) {
+		SBAwayController *cont = (SBAwayController *)[%c(SBAwayController) sharedAwayController];
+		uiLocked = [cont isLocked];
+	}
+	return uiLocked;
+}
+
+////////////////////////Future updates////////////////////////
+/*static BOOL darkMode(){
 	NSDate *date = [NSDate date];
 	NSDateFormatter *dateFormatter;
 	dateFormatter = [[NSDateFormatter alloc] init];
@@ -76,7 +94,8 @@ static BOOL darkMode(){
 	int timeInt = [dateString intValue];
 	if((timeInt >= 20) || (timeInt <= 3)) return YES;
 	else return NO;
-}
+}*/
+//////////////////////////////////////////////////////////////
 
 void getTitles(){
 	if([[[UIDevice currentDevice] systemVersion] floatValue] < 8.0)
@@ -139,13 +158,13 @@ void showAlert(void){
 
 		NSDictionary *data = @{
 			@"alertTitle" : [NSString stringWithFormat:@"Low Battery: %.0f%%", ((float)currentCapacity/maxCapacity)*100],
-			@"alertMessage" : [NSString stringWithFormat:@"Current Capacity:%.0f mAh", (float)currentCapacity],
+			@"alertMessage" : [NSString stringWithFormat:@"Dishcharge Current:%.0f mA", (float)instantAmperage],
 			@"isCharging" : [NSNumber numberWithBool:isCharging],
 			@"currentCapacity" : [NSString stringWithFormat:@"● Current Capacity: %.0f mAh", (float)currentCapacity],
 			@"maxCapacity" : [NSString stringWithFormat:@"● Max Capacity: %.0f mAh",(float) maxCapacity],
 			@"temprature" : [NSString stringWithFormat:@"● Temperature: %.1f°C", (float)temperature/100],
 			@"cycleCount" : [NSString stringWithFormat:@"● Cycles: %.0f", (float)cycleCount],
-			@"darkMode" : [NSNumber numberWithBool:NO],
+			@"darkMode" : [NSNumber numberWithBool:darkMode],
 		};
 
 		zealAlert.completion = ^{
@@ -153,6 +172,10 @@ void showAlert(void){
 			[[NSNotificationCenter defaultCenter] removeObserver:springBoard name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
 			active = false;
 		};
+
+		while(isUILocked()){
+			[NSThread sleepForTimeInterval:2.0f];
+		}
 
 		[zealAlert loadAlertWithData:data orientation:startOrientation];
 		
@@ -234,7 +257,7 @@ void showBanner(){
 void ZealAction(){
 	if(shouldShowBanner){
 		if(bannerMode == 0){
-			showAlert();
+			if (!isUILocked()) showAlert();
 		}else if(bannerMode == 1){
 			showBanner();
 		}else if(bannerMode == 2){
@@ -302,7 +325,12 @@ void powerSavingMde(void){
 	externalConnected 		= [[batteryStatus objectForKey:@"ExternalConnected"] boolValue];
 	fullyCharged			= [[batteryStatus objectForKey:@"FullyCharged"] boolValue];
 	isCharging 				= [[batteryStatus objectForKey:@"IsCharging"]	boolValue];
+
 	%orig;
+
+	if (fullyCharged) {
+		//do smthg
+	}
 }
 
 %new
@@ -335,25 +363,20 @@ void powerSavingMde(void){
 
 - (void)finishUIUnlockFromSource:(int)arg1 {
 	%orig;
-	/*NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:kSettingsPath];
+	NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:kSettingsPath];
 	if (!prefs) {
-		SIAlertView *alertView = [[SIAlertView alloc] initWithTitle:@"Zeal" andMessage:@"Hi there, thank you for purchasing Zeal you can enable this tweak in Settings."];
-		[alertView addButtonWithTitle:@"Settings"
-		type:SIAlertViewButtonTypeDestructive
-		handler:^(SIAlertView *alert) {
-			if ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/PreferenceOrganizer.dylib"]) {
-				[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"prefs:root=Cydia&path=Zeal"]];
-			}else {
-				[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"prefs:root=Zeal"]];
+		[UIAlertView showWithTitle:@"Zeal" message:@"Hi there,\n Thank you for purchasing Zeal." cancelButtonTitle:@"Cancel" otherButtonTitles:@[@"Settings"] tapBlock:^(UIAlertView *alertView, NSInteger buttonIndex) {
+			if (buttonIndex == [alertView cancelButtonIndex]) {
+				//Cancel
+			} else if ([[alertView buttonTitleAtIndex:buttonIndex] isEqualToString:@"Settings"]) {
+				if ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/PreferenceOrganizer.dylib"]) {
+					[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"prefs:root=Cydia&path=Zeal"]];
+				}else {
+					[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"prefs:root=Zeal"]];
+				}
 			}
 		}];
-		[alertView addButtonWithTitle:@"Dismiss"
-		type:SIAlertViewButtonTypeCancel
-		handler:^(SIAlertView *alert) {
-		}];
-		alertView.transitionStyle = SIAlertViewTransitionStyleBounce;
-		[alertView show];
-	}*/
+	}
 }
 
 %end
@@ -411,7 +434,7 @@ void powerSavingMde(void){
 %hook SBLowPowerAlertItem
 
 - (BOOL)shouldShowInLockScreen{
-	return YES;
+	return NO;
 }
 
 - (void)willPresentAlertView:(id)arg1{
