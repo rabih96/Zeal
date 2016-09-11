@@ -11,6 +11,10 @@
 #import <SpringBoard/SpringBoard.h>
 #import <SpringBoard/SBApplication.h>
 
+#define SETBOOL(NAME,KEY,BOOL) (NAME) = ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] boolValue] : (BOOL))
+#define SETINT(NAME,KEY,INT) (NAME) = ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] integerValue] : (INT))
+#define SETTEXT(NAME,KEY) (NAME) = ([prefs objectForKey:@(KEY)] ? [prefs objectForKey:@(KEY)] : (NAME))
+
 #if defined(__cplusplus)
 extern "C" {
 #endif

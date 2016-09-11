@@ -10,9 +10,9 @@ static SBBulletinBannerController *bulletinBannerController;
 static SBBannerController *bannerController;
 static ZealAlert *zealAlert = nil;
 
-static int 			 currentCapacity,	maxCapacity,	instantAmperage,	designCapacity,	cycleCount,	temperature, orient;
-static BOOL 		 darkMode, active, isCharging, externalConnected,	externalChargeCapable, fullyCharged, enabled, customTMA, customTMB,	customSD, addBU, addS, addB, shouldShowBanner = NO;
-static NSInteger 	 batteryLevel = 100, customLevel, bannerMode, bannerTapAction, soundPicked, theme;
+static int 			 currentCapacity,	maxCapacity,	instantAmperage, designCapacity,	cycleCount,	temperature, orient;
+static BOOL 		 darkMode, active, isCharging, externalConnected,	externalChargeCapable, fullyCharged, enabled, customTMA, customTMB,	customSD, shouldShowBanner = NO;
+static NSInteger 	 batteryLevel = 100, customLevel, bannerMode, bannerTapAction, soundPicked;
 static NSString 	 *titleA, *messageA, *titleB, *messageB, *customTitleA, *customTitleB, *customMessageA, *customMessageB;
 static UIScrollView  *scrollView;
 
@@ -23,50 +23,28 @@ static UIScrollView  *scrollView;
 void loadSettings(){
 	NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:kSettingsPath];
 
-	NSNumber *enabledKey = prefs[@"enabled"];
-	enabled = enabledKey ? [enabledKey boolValue] : 0;
-
-	NSNumber *darkModeKey = prefs[@"darkMode"];
-	darkMode = darkModeKey ? [darkModeKey boolValue] : 0;
-
-	NSNumber *bannerModeKey = prefs[@"bannerMode"];
-	bannerMode = bannerModeKey ? [bannerModeKey intValue] : 1;
+	SETBOOL(enabled, "enabled", 0);
+	SETBOOL(darkMode, "darkMode", 0);
+	SETINT(bannerMode, "bannerMode", 1);
+	SETBOOL(customTMA, "customTMA", 0);
+	SETBOOL(customTMB, "customTMB", 0);
+	SETTEXT(customTitleA, "customTitleA");
+	SETTEXT(customTitleB, "customTitleB");
+	SETTEXT(customMessageA, "customMessageA");
+	SETTEXT(customMessageB, "customMessageB");
 
 	NSNumber *bannerTapActionKey = prefs[@"bannerTapAction"];
 	bannerTapAction = bannerTapActionKey ? [bannerTapActionKey intValue] : 1;
 
-	NSNumber *themeKey = prefs[@"theme"];
-	theme = themeKey ? [themeKey intValue] : 1;
-
 	NSNumber *soundPickedKey = prefs[@"soundPicked"];
 	soundPicked = soundPickedKey ? [soundPickedKey intValue] : 4095;
-
-	NSNumber *addBUKey = prefs[@"addBU"];
-	addBU = addBUKey ? [addBUKey boolValue] : 0;
-
-	NSNumber *addSKey = prefs[@"addS"];
-	addS = addSKey ? [addSKey boolValue] : 1;
-
-	NSNumber *addBKey = prefs[@"addB"];
-	addB = addBKey ? [addBKey boolValue] : 0;
 
 	NSNumber *customLevelKey = prefs[@"customLevel"];
 	customLevel = [customLevelKey intValue];
 
-	NSNumber *customTMAKey = prefs[@"customTMA"];
-	customTMA = customTMAKey ? [customTMAKey boolValue] : 0;
-
 	NSNumber *customSDKey = prefs[@"customSD"];
 	customSD = customSDKey ? [customSDKey boolValue] : 0;
 
-	NSNumber *customTMBKey = prefs[@"customTMB"];
-	customTMB = customTMBKey ? [customTMBKey boolValue] : 0;
-
-	customTitleA = [prefs objectForKey:@"customTitleA"];
-	customTitleB = [prefs objectForKey:@"customTitleB"];
-
-	customMessageA = [prefs objectForKey:@"customMessageA"];
-	customMessageB = [prefs objectForKey:@"customMessageB"];
 }
 
 static BOOL isUILocked(){
