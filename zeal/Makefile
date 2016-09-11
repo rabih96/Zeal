@@ -1,10 +1,11 @@
 include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = Zeal
-Zeal_FILES = ZealRootListController.m ZealHeaderView.m ZSegmentCell.m
+Zeal_FILES = ZealRootListController.m ZealHeaderView.m ZSegmentCell.mm
 Zeal_INSTALL_PATH = /Library/PreferenceBundles
 Zeal_FRAMEWORKS = UIKit
 Zeal_PRIVATE_FRAMEWORKS = Preferences
+Zeal_LIBRARIES = colorpicker
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 
