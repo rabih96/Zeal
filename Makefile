@@ -1,7 +1,7 @@
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = Zeal
-Zeal_FILES = Tweak.xm UILabel+Bold.mm ZealAlert.mm
+Zeal_FILES = Tweak.xm UILabel+Bold.mm ZealAlert.mm UIAlertView+Blocks.m
 Zeal_CFLAGS = -w -fobjc-arc -fvisibility=hidden #-x objective-c
 Zeal_FRAMEWORKS = UIKit Foundation QuartzCore AudioToolbox CoreGraphics
 Zeal_PRIVATE_FRAMEWORKS = CoreDuet BulletinBoard NotificationsUI GraphicsServices BackBoardServices
