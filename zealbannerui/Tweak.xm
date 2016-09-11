@@ -1,20 +1,12 @@
 #import "NotificationsUI.h"
 #import "ChatKit.h"
 #import <Flipswitch/Flipswitch.h>
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
-#if defined(__cplusplus)
-}
-#endif
+#import <BackBoardServices/BKSDisplayBrightness.h>
+#include <notify.h>
+#include <substrate.h>
 
 @interface SpringBoard : UIApplication
 -(void)adjustBrightness:(CGFloat)brightness isTracking:(BOOL)isTracking;
-@end
-
-@interface SBCCBrightnessSectionController : UIViewController
 @end
 
 @interface _CDBatterySaver : NSObject
