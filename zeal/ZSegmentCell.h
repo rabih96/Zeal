@@ -4,7 +4,7 @@
 #import <UIKit/UIKit.h>
 
 @interface ZSegmentCell : PSTableCell {
-    UISegmentedControl *_segmentedControl;
+    UISegmentedControl *segmentedControl;
 
     //NSArray *titleArray; may be added in future updates
     NSArray *imagesArray;

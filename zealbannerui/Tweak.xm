@@ -16,24 +16,33 @@
 - (BOOL)setPowerMode:(int)arg1 error:(id*)arg2;
 @end
 
-#define powerSaver [NSClassFromString(@"_CDBatterySaver") batterySaver]
-
-extern "C" CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
-
-static inline NSString* NSStringFromCGFloat(CGFloat value){
-	return [NSString stringWithFormat:@"%f", value];
-}
-
+#define springBoard 					[NSClassFromString(@"SpringBoard") sharedApplication]
+#define powerSaver 						[NSClassFromString(@"_CDBatterySaver") batterySaver]
 #define kBounds 						[[UIScreen mainScreen] bounds]
-#define kSettingsPath 					@"/User/Library/Preferences/com.rabih96.ZealPrefs.plist"	//[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
+#define kSettingsPath 					[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
 #define PreferencesChangedNotification	"com.rabih96.ZealPrefs.Changed"
 #define kRemoveBanner					"com.rabih96.ZealPrefs.Dismiss"
 #define kPowerSaverMde					"com.rabih96.ZealPrefs.PSM"
 #define kChangeBrightness				"com.rabih96.ZealPrefs.Brightness"
 
 #define AppIconSize 45
-#define AppSpacing 20
-#define AppsPerRow 5
+#define AppSpacing 	15
+#define AppsPerRow 	5
+
+static inline NSString* NSStringFromCGFloat(CGFloat value){
+	return [NSString stringWithFormat:@"%f", value];
+}
+
+%group NotificationHook
+
+static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
+	float spacing = (width - (AppIconSize*AppsPerRow) - (AppSpacing*2))/(AppsPerRow-1);
+	int pageNumber = floor((appNumber-1)/AppsPerRow);
+	int pageWidth = pageNumber*width;
+	if((appNumber-1) % AppsPerRow == 0)	return pageWidth + AppSpacing;
+	else	return pageWidth + AppSpacing + ((appNumber-(pageNumber*AppsPerRow))-1)*(AppIconSize+spacing);
+}
+
 #define Alert(TITLE,MSG) 		[[[UIAlertView alloc] initWithTitle:(TITLE) message:(MSG) delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show]
 	
 UIButton *closeButton 		= nil;
@@ -44,26 +53,24 @@ UIImageView  *lowBright     = nil;
 UIImageView  *highBright    = nil;
 
 static UISlider *brightnessSlider = nil;
+static UIScrollView *flipSwitchScrollView;
 
 @interface CKInlineReplyViewController : NCInteractiveNotificationViewController
 @end
 
 @interface ZealBannerViewController : CKInlineReplyViewController
 @property (nonatomic,retain) CKMessageEntryView *entryView;
-- (CGFloat)calculateXPositionForAppNumber:(int)appNumber forWidth:(int)width;
 - (void)exit;
 - (void)changeBrightness;
 - (void)powerSavingMode;
 @end
-
-%group NotificationHook
 
 %subclass ZealBannerViewController : CKInlineReplyViewController
 
 - (id)init{
 	self = %orig;
 	if(self){
-			self.view.backgroundColor = [UIColor colorWithWhite:0.15f alpha:0.4f];
+			//self.view.backgroundColor = [UIColor colorWithWhite:0.2f alpha:0.4f];
 	}
 	return self;
 }
@@ -119,16 +126,19 @@ static UISlider *brightnessSlider = nil;
 	[powerSavingButton setClipsToBounds:YES];
 	[self.view addSubview:powerSavingButton];
 
-	dlopen("/Library/MobileSubstrate/DynamicLibraries/Flipswitch.dylib", RTLD_NOW);
+	NSBundle *templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/FlipControlCenter/TopShelf8.bundle"];
+	NSArray *enabledSwitchesArray = [[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"];
+	FSSwitchPanel *flipSwitchPanel = [FSSwitchPanel sharedPanel];
 
-	NSArray	*array = [[[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"] subarrayWithRange:NSMakeRange(0, 5)];
-	FSSwitchPanel 	*fsp			= [FSSwitchPanel sharedPanel];
-	NSBundle 		*templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/FlipControlCenter/TopShelf8.bundle"];
-
-	for(NSString *identifier in array) {
-		__weak UIButton *button	= [fsp buttonForSwitchIdentifier:identifier usingTemplate:templateBundle];
-		button.frame = CGRectMake([self calculateXPositionForAppNumber:[array indexOfObject:identifier]+1 forWidth:size.width],	size.height-100+(AppIconSize/2), AppIconSize, AppIconSize);
-		[self.view addSubview:button];
+	if ([enabledSwitchesArray count] > 0){
+		int i = 1;
+		for(NSString *identifier in enabledSwitchesArray) {
+			UIButton *flipSwitchButton = [flipSwitchPanel buttonForSwitchIdentifier:identifier usingTemplate:templateBundle];
+			flipSwitchButton.frame = CGRectMake(calculateXPositionForAppNumber(i,size.width), size.height-30-(AppIconSize/2)-5, AppIconSize, AppIconSize);
+			[self.view addSubview:flipSwitchButton];
+			if(i == AppsPerRow) break;
+			i++;
+		}
 	}
 }
 
@@ -139,6 +149,7 @@ static UISlider *brightnessSlider = nil;
 	[lineView2 removeFromSuperview];
 	[closeButton removeFromSuperview];
 	[brightnessSlider removeFromSuperview];
+	//[flipSwitchScrollView removeFromSuperview];
 }
 
 - (void)viewDidLayoutSubviews{
@@ -151,49 +162,14 @@ static UISlider *brightnessSlider = nil;
 	lineView2.frame = CGRectMake(0, brightnessSlider.frame.origin.y+brightnessSlider.frame.size.height, size.width, 0.5);
 	lowBright.frame = CGRectMake(5,brightnessSlider.frame.origin.y+15,20,20);
 	highBright.frame = CGRectMake(size.width-25,brightnessSlider.frame.origin.y+15,20,20);
+	flipSwitchScrollView.frame = CGRectMake(0, lineView2.frame.origin.y + 6, size.width, 60);
+	NSArray *enabledSwitchesArray = [[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"];
+	flipSwitchScrollView.contentSize = CGSizeMake( ceil(enabledSwitchesArray.count/(AppsPerRow*1.0))*size.width, flipSwitchScrollView.frame.size.height);
 
-	//[subview1 setNeedsLayout];
-
-	/*dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-		for(UIView *switches in scrollView.subviews){
-			[switches removeFromSuperview];
-		}
-
-		dispatch_async(dispatch_get_main_queue(), ^{
-			UIButton *button = nil;
-			if(button != nil)	[button removeFromSuperview];
-
-			int i = 1;
-
-			NSArray	*array = [[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"];
-
-			FSSwitchPanel 	*fsp	= [FSSwitchPanel sharedPanel];
-			NSBundle 						*templateBundle 			= [NSBundle bundleWithPath:@"/Library/Application Support/FlipControlCenter/TopShelf8.bundle"];
-
-			for(NSString *identifier in array) {
-				button = [fsp buttonForSwitchIdentifier:identifier usingTemplate:templateBundle];
-				button.frame = CGRectMake([self calculateXPositionForAppNumber:i forWidth:size.width],	(scrollView.frame.size.height-AppIconSize)/2, AppIconSize, AppIconSize);
-				[scrollView addSubview:button];
-				i++;
-			}
-
-			scrollView.contentSize = CGSizeMake( ceil(array.count/(AppsPerRow*1.0))*size.width, scrollView.frame.size.height);
-
-		});
-	});*/
 }
 
 - (CGFloat)preferredContentHeight{
 	return 210.0;
-}
-
-%new
--(CGFloat)calculateXPositionForAppNumber:(int)appNumber forWidth:(int)width{
-	float spacing = (width - (AppIconSize*AppsPerRow) - (AppSpacing*2))/(AppsPerRow-1);
-	int pageNumber = floor((appNumber-1)/AppsPerRow);
-	int pageWidth = pageNumber*width;
-	if((appNumber-1) % AppsPerRow == 0)	return pageWidth + AppSpacing;
-	else	return pageWidth + AppSpacing + ((appNumber-(pageNumber*AppsPerRow))-1)*(AppIconSize+spacing);
 }
 
 %new

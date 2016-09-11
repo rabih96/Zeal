@@ -24,16 +24,16 @@
 			[itemArray addObject:[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@/%@", @kBundlePath, imgName]]];
 		}
 
-		_segmentedControl = [[UISegmentedControl alloc] initWithItems:itemArray];
-		_segmentedControl.frame = CGRectMake((kBounds.size.width - 320) * 0.5, 7.5, 320, 140);
-		_segmentedControl.segmentedControlStyle = UISegmentedControlStyleBar;
-		[_segmentedControl addTarget:self action:@selector(segmentedControlValueDidChange:) forControlEvents: UIControlEventValueChanged];
-		_segmentedControl.selectedSegmentIndex = bannerModeKey ? [bannerModeKey intValue] : 0;
-		[_segmentedControl setDividerImage:[UIImage alloc] forLeftSegmentState:UIControlStateNormal rightSegmentState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
-		_segmentedControl.layer.borderWidth = 0;
-		_segmentedControl.tintColor = [UIColor colorWithRed:0.45 green:0.99 blue:0.69 alpha:1.0];
-		[self.contentView addSubview:_segmentedControl];        
-		[_segmentedControl release]; 
+		segmentedControl = [[UISegmentedControl alloc] initWithItems:itemArray];
+		segmentedControl.frame = CGRectMake((kBounds.size.width - 320) * 0.5, 7.5, 320, 140);
+		segmentedControl.segmentedControlStyle = UISegmentedControlStyleBar;
+		[segmentedControl addTarget:self action:@selector(segmentedControlValueDidChange:) forControlEvents: UIControlEventValueChanged];
+		segmentedControl.selectedSegmentIndex = bannerModeKey ? [bannerModeKey intValue] : 0;
+		[segmentedControl setDividerImage:[UIImage alloc] forLeftSegmentState:UIControlStateNormal rightSegmentState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
+		segmentedControl.layer.borderWidth = 0;
+		segmentedControl.tintColor = [UIColor colorWithRed:0.45 green:0.99 blue:0.69 alpha:1.0];
+		[self.contentView addSubview:segmentedControl];        
+		[segmentedControl release]; 
 	}
 
 	return self;

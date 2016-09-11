@@ -6,11 +6,20 @@
 #import <Flipswitch/Flipswitch.h>
 #import <substrate.h>
 #import <dlfcn.h>
-//#import "mbabannerui/Headers.h"
 #import <BackBoardServices/BKSDisplayBrightness.h>
+#import <libobjcipc/objcipc.h>
+#import <SpringBoard/SpringBoard.h>
+#import <SpringBoard/SBApplication.h>
 
-#define kSettingsPath	[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.mba2prefs.plist"]
-extern "C" CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
+
+#if defined(__cplusplus)
+}
+#endif
 
 @interface SBCCBrightnessSectionController : UIViewController
 @end
@@ -22,24 +31,36 @@ extern "C" CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void
 - (BOOL)setPowerMode:(int)arg1 error:(id*)arg2;
 @end
 
-#define powerSaver [NSClassFromString(@"_CDBatterySaver") batterySaver]
+#define springBoard 					[NSClassFromString(@"SpringBoard") sharedApplication]
+#define powerSaver 						[NSClassFromString(@"_CDBatterySaver") batterySaver]
+#define kBounds 						[[UIScreen mainScreen] bounds]
+#define kSettingsPath 					[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
+#define PreferencesChangedNotification	"com.rabih96.ZealPrefs.Changed"
+#define kRemoveBanner					"com.rabih96.ZealPrefs.Dismiss"
+#define kPowerSaverMde					"com.rabih96.ZealPrefs.PSM"
+#define kChangeBrightness				"com.rabih96.ZealPrefs.Brightness"
 
-@interface SBApplication : NSObject
-- (id)mainSceneID;
-- (id)_screenFromSceneID:(id)arg1;
+#define AppIconSize 45
+#define AppSpacing 	15
+#define AppsPerRow 	5
+
+#define kOBJCIPCServer1 @"com.rabih96.Zeal.orientation1"
+#define kOBJCIPCServer2 @"com.rabih96.Zeal.orientation2"
+
+@interface SBChevronView : UIView
+@property(retain, nonatomic) UIColor *color;
+- (id)initWithColor:(id)arg1;
+- (void)setState:(int)state animated:(BOOL)animated;
+@end
+
+@interface SBControlCenterGrabberView : UIView
+- (SBChevronView *)chevronView;
 @end
 
 @interface UIApplication ()
 - (id)_mainScene;
 - (id)_keyWindowForScreen:(id)arg1;
 - (SBApplication*) _accessibilityFrontMostApplication;
-@end
-
-@interface SpringBoard : UIApplication
-- (id)_accessibilityFrontMostApplication;
-- (id)_keyWindowForScreen:(id)arg1;
-- (UIInterfaceOrientation)activeInterfaceOrientation;
-- (void)removeWindow;
 @end
 
 @interface SBStatusBarStateAggregator
@@ -226,7 +247,7 @@ extern void BBDataProviderSetApplicationBadgeString(BBDataProvider *dataProvider
 - (id)uniqueIdentifier;
 @end
 
-@interface BBServer (MBA)
+@interface BBServer (zeal)
 + (instancetype)sharedInstance;
 @end
 
@@ -397,7 +418,7 @@ extern void BBDataProviderSetApplicationBadgeString(BBDataProvider *dataProvider
 - (void)adjustBrightness;
 @end
 
-@interface CKInlineReplyViewController (MBA)
+@interface CKInlineReplyViewController (zeal)
 //@property (retain, nonatomic, readonly) CPDistributedMessagingCenter *messagingCenter;
 @property (retain, nonatomic) FlipSwitchViewController *flipSwitchViewController;
 /*@property (retain, nonatomic) CouriaContactsViewController *contactsViewController;
