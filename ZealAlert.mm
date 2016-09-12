@@ -179,7 +179,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[alertView addSubview:lineView2];
 
 	//Flip Switch buttons
-	NSBundle *templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/FlipControlCenter/TopShelf8.bundle"];
+	NSBundle *templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/Zeal/ZealFS.bundle"];
 	NSArray *enabledSwitchesArray = [[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"];
 	FSSwitchPanel *flipSwitchPanel = [FSSwitchPanel sharedPanel];
 
