@@ -40,9 +40,11 @@
 }
 
 -(void)segmentedControlValueDidChange:(UISegmentedControl *)segment {
-	NSUserDefaults *prefs = [[NSUserDefaults alloc] initWithSuiteName:@"com.rabih96.ZealPrefs"];
-    [prefs setInteger:(int)segment.selectedSegmentIndex forKey:@"bannerMode"];
-    [prefs synchronize];
+    NSDictionary *tweakSettings = [NSDictionary dictionaryWithContentsOfFile:kSettingsPath];
+	NSMutableDictionary *defaults = [NSMutableDictionary dictionary];
+	[defaults addEntriesFromDictionary:tweakSettings];
+	[defaults setObject:[NSNumber numberWithInteger:[segment selectedSegmentIndex]] forKey:@"bannerMode"];
+	[defaults writeToFile:kSettingsPath atomically:YES];
 	CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)PreferencesChangedNotification, NULL, NULL, YES);
 }
 
