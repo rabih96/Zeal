@@ -30,7 +30,7 @@
 			<key>type</key>
 			<string>image</string>
 			<key>fileName</key>
-			<string>background-on</string>
+			<string>background</string>
 			<key>x</key>
 			<integer>0</integer>
 			<key>y</key>
@@ -75,7 +75,7 @@
 			<key>type</key>
 			<string>image</string>
 			<key>fileName</key>
-			<string>background-on</string>
+			<string>background</string>
 			<key>x</key>
 			<integer>0</integer>
 			<key>y</key>
@@ -111,7 +111,7 @@
 			<string>#000000</string>
 		</dict>
 	</array>
-	<key>layers-disabled</key>
+	<key>layers-off</key>
 	<array>
 		<dict>
 			<key>type</key>
@@ -125,7 +125,7 @@
 			<key>y</key>
 			<integer>10</integer>
 			<key>opacity</key>
-			<real>0.6</real>
+			<real>0.8</real>
 			<key>color</key>
 			<string>#A6A6A6</string>
 		</dict>
