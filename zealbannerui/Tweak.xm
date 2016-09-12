@@ -134,7 +134,7 @@ static UIScrollView *flipSwitchScrollView;
 	[powerSavingButton setClipsToBounds:YES];
 	[self.view addSubview:powerSavingButton];
 
-	NSBundle *templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/FlipControlCenter/TopShelf8.bundle"];
+	NSBundle *templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/Zeal/ZealFS.bundle"];
 	NSArray *enabledSwitchesArray = [[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"];
 	FSSwitchPanel *flipSwitchPanel = [FSSwitchPanel sharedPanel];
 
