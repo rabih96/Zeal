@@ -1,3 +1,16 @@
+//
+//	Zeal
+//	By Rabih Mteyrek (@rabih96)
+//
+//	Successor of MyBatteryAlerts
+//	
+//	TODO:
+//	-fix titles
+//	-complete settings
+//	-clean code
+//
+//
+
 #import "ZealAlert.h"
 #import "Zeal.h"
 #import "UILabel+Bold.h"
@@ -11,7 +24,7 @@ static SBBannerController *bannerController;
 static ZealAlert *zealAlert = nil;
 
 static int 			 currentCapacity,	maxCapacity,	instantAmperage, designCapacity,	cycleCount,	temperature, orient;
-static BOOL 		 darkMode, active, isCharging, externalConnected,	externalChargeCapable, fullyCharged, enabled, customTMA, customTMB,	customSD, shouldShowBanner = NO;
+static BOOL 		 locked = YES, darkMode, active, isCharging, externalConnected,	externalChargeCapable, fullyCharged, enabled, customTMA, customTMB,	customSD, shouldShowBanner = NO;
 static NSInteger 	 batteryLevel = 100, customLevel, bannerMode, bannerTapAction, soundPicked;
 static NSString 	 *titleA, *messageA, *titleB, *messageB, *customTitleA, *customTitleB, *customMessageA, *customMessageB;
 static UIScrollView  *scrollView;
@@ -36,8 +49,7 @@ void loadSettings(){
 	NSNumber *bannerTapActionKey = prefs[@"bannerTapAction"];
 	bannerTapAction = bannerTapActionKey ? [bannerTapActionKey intValue] : 1;
 
-	NSNumber *soundPickedKey = prefs[@"soundPicked"];
-	soundPicked = soundPickedKey ? [soundPickedKey intValue] : 4095;
+	SETINT(soundPicked, "soundPicked", 4095);
 
 	NSNumber *customLevelKey = prefs[@"customLevel"];
 	customLevel = [customLevelKey intValue];
@@ -45,19 +57,6 @@ void loadSettings(){
 	NSNumber *customSDKey = prefs[@"customSD"];
 	customSD = customSDKey ? [customSDKey boolValue] : 0;
 
-}
-
-static BOOL isUILocked(){
-	BOOL uiLocked = NO;
-	if (%c(SBLockScreenManager)) {
-		SBLockScreenManager *manager = (SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance];
-		uiLocked = [manager isUILocked];
-	}
-	else if (%c(SBAwayController)) {
-		SBAwayController *cont = (SBAwayController *)[%c(SBAwayController) sharedAwayController];
-		uiLocked = [cont isLocked];
-	}
-	return uiLocked;
 }
 
 ////////////////////////Future updates////////////////////////
@@ -75,25 +74,55 @@ static BOOL isUILocked(){
 }*/
 //////////////////////////////////////////////////////////////
 
+NSString *formatTimeFromSeconds(int numberOfSeconds){
+
+    int seconds = numberOfSeconds % 60;
+    int minutes = (numberOfSeconds / 60) % 60;
+    int hours = numberOfSeconds / 3600;
+
+    if (hours) return [NSString stringWithFormat:@"%dh %02dmin", hours, minutes];
+    if (minutes) return [NSString stringWithFormat:@"%dmin %02dsec", minutes, seconds];
+    return [NSString stringWithFormat:@"%dsec", seconds];
+}
+
 void getTitles(){
 	if([[[UIDevice currentDevice] systemVersion] floatValue] < 8.0)
 		batteryLevel = (int)[[objc_getClass("SBUIController") sharedInstance] curvedBatteryCapacityAsPercentage];
 	else
 		batteryLevel = (int)[[objc_getClass("SBUIController") sharedInstance] batteryCapacityAsPercentage];
 
-	if(customTMA){
-		titleA = customTitleA;
-		messageA = customMessageA;
-	}else{
-		titleA = [NSString stringWithFormat:@"Low Battery"];
-		messageA = [NSString stringWithFormat:@"%ld%% of battery remaining",(long)batteryLevel];
+	NSString *batteryTitle = nil;
+
+	if (fullyCharged){
+		batteryTitle = @"Full Battery";		
+	}else if (batteryLevel<100 && batteryLevel>90){
+		batteryTitle = @"Almost Full Battery";
+	}else if (batteryLevel<=90 && batteryLevel>65){
+		batteryTitle = @"Partially Full Battery";
+	}else if (batteryLevel<=65 && batteryLevel>45){
+		batteryTitle = @"Half Full Battery";
+	}else if (batteryLevel<=45 && batteryLevel>20){
+		batteryTitle = @"Partially Low Battery";
+	}else if (batteryLevel<=20){
+		batteryTitle = @"Low Battery";
 	}
+
+	NSString *batteryMessage = nil;
+
+	if (isCharging){
+		batteryMessage = [NSString stringWithFormat:@"Time left to fully charge ≅ %@", formatTimeFromSeconds((int)((maxCapacity - currentCapacity) / abs(instantAmperage) * 0.7))];
+	}else{
+		batteryMessage = [NSString stringWithFormat:@"Usage time left ≅ %@", formatTimeFromSeconds((int)roundf( (float)currentCapacity / abs(instantAmperage) * 2520.0 ))];
+	}
+
+	titleA = customTMA ? customTitleA : batteryTitle;
+	messageA = customTMA ? customMessageA : batteryMessage;
 
 	if(customTMB){
 		titleB = customTitleB;
 		messageB = customMessageB;
 	}else{
-		titleB = [NSString stringWithFormat:@"Low Battery"];
+		titleB = batteryTitle;
 		messageB = [NSString stringWithFormat:@"%ld%% of battery remaining",(long)batteryLevel];
 	}
 }
@@ -117,7 +146,7 @@ CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 void showAlert(void){
 	getTitles();
 
-	if (!active) {
+	if (!active && !locked) {
 
 		NSString *appIdentifier = [(SpringBoard *)[UIApplication sharedApplication] _accessibilityFrontMostApplication].bundleIdentifier;
 		UIInterfaceOrientation startOrientation;
@@ -135,13 +164,15 @@ void showAlert(void){
 		active = true;
 
 		NSDictionary *data = @{
-			@"alertTitle" : [NSString stringWithFormat:@"Low Battery: %.0f%%", ((float)currentCapacity/maxCapacity)*100],
-			@"alertMessage" : [NSString stringWithFormat:@"Dishcharge Current:%.0f mA", (float)instantAmperage],
+			@"alertTitle" : [NSString stringWithFormat:@"%@ %.0f%%", titleA,((float) currentCapacity / maxCapacity) * 100],
+			@"alertMessage" : messageA,
 			@"isCharging" : [NSNumber numberWithBool:isCharging],
-			@"currentCapacity" : [NSString stringWithFormat:@"● Current Capacity: %.0f mAh", (float)currentCapacity],
-			@"maxCapacity" : [NSString stringWithFormat:@"● Max Capacity: %.0f mAh",(float) maxCapacity],
-			@"temprature" : [NSString stringWithFormat:@"● Temperature: %.1f°C", (float)temperature/100],
-			@"cycleCount" : [NSString stringWithFormat:@"● Cycles: %.0f", (float)cycleCount],
+			@"currentCapacity" : [NSString stringWithFormat:@"Current Capacity: %.0f mAh", (float) currentCapacity],
+			@"maxCapacity" : [NSString stringWithFormat:@"Max Capacity: %.0f mAh",(float) maxCapacity],
+			@"designCapacity" : [NSString stringWithFormat:@"Design Capacity: %.0f mAh",(float) designCapacity],
+			@"temprature" : [NSString stringWithFormat:@"Temperature: %.1f°C", (float) temperature / 100],
+			@"cycleCount" : [NSString stringWithFormat:@"Cycles: %.0f", (float) cycleCount],
+			@"wearLevel" : [NSString stringWithFormat:@"Wear Level: %.0f%%", (1.0 - ((float) maxCapacity / designCapacity)) * 100],
 			@"darkMode" : [NSNumber numberWithBool:darkMode],
 		};
 
@@ -150,10 +181,6 @@ void showAlert(void){
 			[[NSNotificationCenter defaultCenter] removeObserver:springBoard name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
 			active = false;
 		};
-
-		while(isUILocked()){
-			[NSThread sleepForTimeInterval:2.0f];
-		}
 
 		[zealAlert loadAlertWithData:data orientation:startOrientation];
 		
@@ -233,9 +260,9 @@ void showBanner(){
 }
 
 void ZealAction(){
-	if(shouldShowBanner){
+	if(shouldShowBanner && !locked){
 		if(bannerMode == 0){
-			if (!isUILocked()) showAlert();
+			showAlert();
 		}else if(bannerMode == 1){
 			showBanner();
 		}else if(bannerMode == 2){
@@ -306,14 +333,57 @@ void powerSavingMde(void){
 
 	%orig;
 
+	//Update the info on the alert if visible
+	if (zealAlert != nil){
+		getTitles();
+		[zealAlert updateData:@{
+			@"alertTitle" : [NSString stringWithFormat:@"%@ %.0f%%", titleA,((float) currentCapacity / maxCapacity) * 100],
+			@"alertMessage" : messageA,
+			@"isCharging" : [NSNumber numberWithBool:isCharging],
+			@"currentCapacity" : [NSString stringWithFormat:@"Current Capacity: %.0f mAh", (float) currentCapacity],
+			@"maxCapacity" : [NSString stringWithFormat:@"Max Capacity: %.0f mAh",(float) maxCapacity],
+			@"designCapacity" : [NSString stringWithFormat:@"Design Capacity: %.0f mAh",(float) designCapacity],
+			@"temprature" : [NSString stringWithFormat:@"Temperature: %.1f°C", (float) temperature / 100],
+			@"cycleCount" : [NSString stringWithFormat:@"Cycles: %.0f", (float) cycleCount],
+			@"wearLevel" : [NSString stringWithFormat:@"Wear Level: %.0f", (1.0 - ((float) maxCapacity / designCapacity)) * 100],
+			@"darkMode" : [NSNumber numberWithBool:darkMode],
+		}];
+	}
+
 	if (fullyCharged) {
-		//do smthg
+		//do smthg.
 	}
 }
 
 %new
 - (void)powerSavingMode{
 	[powerSaver setMode:![powerSaver getPowerMode]];
+}
+
+-(void)_handleMenuButtonEvent {
+	if(zealAlert != nil) [zealAlert _hideAlert];
+	else %orig;
+}
+
+-(void)_menuButtonWasHeld {
+	if(zealAlert != nil) [zealAlert _hideAlert];
+	%orig;
+}
+
+-(void)handleMenuDoubleTap {
+	if(zealAlert != nil) [zealAlert _hideAlert];
+	%orig;
+}
+
+-(void)_lockButtonDown:(id)arg1 fromSource:(int)arg2{
+	if(zealAlert != nil) [zealAlert _hideAlert];
+	%orig;
+}
+
+-(void)_lockButtonUp:(id)arg1 fromSource:(int)arg2{
+	%orig;
+	//[UIAlertView showWithTitle:@"Zeal" message:@"Locked" cancelButtonTitle:@"Cancel" otherButtonTitles:@[] tapBlock:^(UIAlertView *alertView, NSInteger buttonIndex) {}];
+	locked = YES;
 }
 
 %end
@@ -341,9 +411,12 @@ void powerSavingMde(void){
 
 - (void)finishUIUnlockFromSource:(int)arg1 {
 	%orig;
+
+	locked = NO;
+
 	NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:kSettingsPath];
 	if (!prefs) {
-		[UIAlertView showWithTitle:@"Zeal" message:@"Hi there,\n Thank you for purchasing Zeal." cancelButtonTitle:@"Cancel" otherButtonTitles:@[@"Settings"] tapBlock:^(UIAlertView *alertView, NSInteger buttonIndex) {
+		[UIAlertView showWithTitle:@"Zeal" message:@"Hi there,\n Thank you for purchasing Zeal, it took me a lot of time and work so i hope you'll like it." cancelButtonTitle:@"Cancel" otherButtonTitles:@[@"Settings"] tapBlock:^(UIAlertView *alertView, NSInteger buttonIndex) {
 			if (buttonIndex == [alertView cancelButtonIndex]) {
 				//Cancel
 			} else if ([[alertView buttonTitleAtIndex:buttonIndex] isEqualToString:@"Settings"]) {
@@ -355,6 +428,8 @@ void powerSavingMde(void){
 			}
 		}];
 	}
+
+	if (shouldShowBanner) CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFSTR(kShowAlert), NULL, NULL, YES);
 }
 
 %end
@@ -422,14 +497,19 @@ void powerSavingMde(void){
 
 %end
 
-%hook SBCCBrightnessSectionController
-
-- (BOOL)_shouldDarkenBackground{
-	if(self.view.tag == 01305435) return NO;
-	else return %orig;
+/*%hook SBControlCenterController 
+-(id)init {
+	if(zealAlert != nil) return nil;
+	return %orig;
 }
-
 %end
+
+%hook SBNotificationCenterController 
+-(id)init {
+	if(zealAlert != nil) return nil;
+	return %orig;
+}
+%end*/
 
 %ctor{
 	[OBJCIPC registerIncomingMessageFromAppHandlerForMessageName:kOBJCIPCServer2 handler:^NSDictionary *(NSDictionary *message) {
@@ -442,6 +522,7 @@ void powerSavingMde(void){
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)loadSettings, CFSTR(PreferencesChangedNotification), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	loadSettings();
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)dissmissBanner, CFSTR(kRemoveBanner), NULL, 0);
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)ZealAction, CFSTR(kShowAlert), NULL, 0);
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)powerSavingMde, CFSTR(kPowerSaverMde), NULL, 0);
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(),	NULL, changeBrightness,	CFSTR(kChangeBrightness), NULL,	CFNotificationSuspensionBehaviorDeliverImmediately);
 }

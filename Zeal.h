@@ -43,6 +43,7 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 #define kRemoveBanner					"com.rabih96.ZealPrefs.Dismiss"
 #define kPowerSaverMde					"com.rabih96.ZealPrefs.PSM"
 #define kChangeBrightness				"com.rabih96.ZealPrefs.Brightness"
+#define kShowAlert						"com.rabih96.ZealPrefs.showAlert"
 
 #define AppIconSize 45
 #define AppSpacing 	15
@@ -50,6 +51,12 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 
 #define kOBJCIPCServer1 @"com.rabih96.Zeal.orientation1"
 #define kOBJCIPCServer2 @"com.rabih96.Zeal.orientation2"
+
+@interface SBUserAgent : NSObject
++ (SBUserAgent *)sharedUserAgent;
+-(BOOL)deviceIsPasscodeLocked;
+-(BOOL)deviceIsLocked;
+@end
 
 @interface SBChevronView : UIView
 @property(retain, nonatomic) UIColor *color;

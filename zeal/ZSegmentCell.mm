@@ -1,5 +1,8 @@
 #import "ZSegmentCell.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations" 
+
 #define kBounds 						[[UIScreen mainScreen] bounds]
 #define kBundlePath 					"/Library/PreferenceBundles/Zeal.bundle/"
 #define kSettingsPath 					[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
@@ -49,3 +52,4 @@
 }
 
 @end
+#pragma clang diagnostic pop

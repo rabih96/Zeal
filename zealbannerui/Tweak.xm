@@ -78,7 +78,7 @@ static UIScrollView *flipSwitchScrollView;
 - (id)init{
 	self = %orig;
 	if(self){
-			//self.view.backgroundColor = [UIColor colorWithWhite:0.2f alpha:0.4f];
+			//self.view.backgroundColor = [UIColor colorWithWhite:0.22f alpha:0.33f];
 	}
 	return self;
 }
@@ -127,6 +127,7 @@ static UIScrollView *flipSwitchScrollView;
 	highBright.frame = CGRectMake(size.width-25, 65, 20, 20);
 
 	powerSavingButton = [UIButton buttonWithType:UIButtonTypeCustom];
+	powerSavingButton.contentEdgeInsets  = UIEdgeInsetsMake(0.0f, -5.0f, 0.0f, 0.0f);
 	[powerSavingButton setTitle:([powerSaver getPowerMode] == 1) ? @"Deactivate battery saving mode" : @"Activate battery saving mode" forState:UIControlStateNormal];
 	[powerSavingButton addTarget:self action:@selector(powerSavingMde) forControlEvents:UIControlEventTouchUpInside];
 	powerSavingButton.backgroundColor = [UIColor colorWithRed:196.0/255 green:196.0/255 blue:201.0/255 alpha:0.5];
@@ -134,7 +135,7 @@ static UIScrollView *flipSwitchScrollView;
 	[powerSavingButton setClipsToBounds:YES];
 	[self.view addSubview:powerSavingButton];
 
-	NSBundle *templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/Zeal/ZealFS.bundle"];
+	NSBundle *templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/Zeal/ZealFSNC.bundle"];
 	NSArray *enabledSwitchesArray = [[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"];
 	FSSwitchPanel *flipSwitchPanel = [FSSwitchPanel sharedPanel];
 

@@ -47,10 +47,6 @@
 	return item;
 }
 
-- (void)respring {
-	system("killall backboardd");
-}
-
 - (void)followMe:(id)specifier {
 	if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"tweetbot:"]]) {
 		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"tweetbot:///user_profile/rabih96"]];

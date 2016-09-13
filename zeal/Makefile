@@ -1,3 +1,5 @@
+TARGET = :8.1
+
 include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = Zeal

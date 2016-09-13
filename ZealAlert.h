@@ -29,6 +29,8 @@ typedef void(^CompletionBlock)(void);
 	UILabel *maxAmps;
 	UILabel *temprature;
 	UILabel *cycles;
+	UILabel *designAmps;
+	UILabel *wearLevel;
 
 	CGFloat screenWidth;
 	CGFloat screenHeight;
@@ -55,6 +57,7 @@ typedef void(^CompletionBlock)(void);
 -(void)_createAlert;
 -(void)_showAlert;
 -(void)_hideAlert;
+-(void)updateData:(NSDictionary *)data;
 -(void)loadAlertWithData:(NSDictionary *)dict orientation:(UIInterfaceOrientation)orientation;
 
 @end

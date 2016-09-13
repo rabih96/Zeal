@@ -1,3 +1,6 @@
+TARGET = iphone:clang:latest:8.1
+LDFLAGS = -Wl,-segalign,4000
+
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = Zeal
