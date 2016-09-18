@@ -43,7 +43,7 @@
 }
 
 -(void)segmentedControlValueDidChange:(UISegmentedControl *)segment {
-    NSDictionary *tweakSettings = [NSDictionary dictionaryWithContentsOfFile:kSettingsPath];
+	NSDictionary *tweakSettings = [NSDictionary dictionaryWithContentsOfFile:kSettingsPath];
 	NSMutableDictionary *defaults = [NSMutableDictionary dictionary];
 	[defaults addEntriesFromDictionary:tweakSettings];
 	[defaults setObject:[NSNumber numberWithInteger:[segment selectedSegmentIndex]] forKey:@"bannerMode"];

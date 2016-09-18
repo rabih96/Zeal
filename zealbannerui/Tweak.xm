@@ -28,6 +28,7 @@ extern "C" {
 #define powerSaver 						[NSClassFromString(@"_CDBatterySaver") batterySaver]
 #define kBounds 						[[UIScreen mainScreen] bounds]
 #define kSettingsPath 					[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
+#define kColorBannerSettingsPath 		[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.golddavid.colorbanners.plist"]
 #define PreferencesChangedNotification	"com.rabih96.ZealPrefs.Changed"
 #define kRemoveBanner					"com.rabih96.ZealPrefs.Dismiss"
 #define kPowerSaverMde					"com.rabih96.ZealPrefs.PSM"
@@ -35,7 +36,7 @@ extern "C" {
 
 #define AppIconSize 45
 #define AppSpacing 	15
-#define AppsPerRow 	5
+#define SETINT(NAME,KEY,INT) (NAME) = ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] integerValue] : (INT))
 
 static inline NSString* NSStringFromCGFloat(CGFloat value){
 	return [NSString stringWithFormat:@"%f", value];
@@ -43,12 +44,12 @@ static inline NSString* NSStringFromCGFloat(CGFloat value){
 
 %group NotificationHook
 
-static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
-	float spacing = (width - (AppIconSize*AppsPerRow) - (AppSpacing*2))/(AppsPerRow-1);
-	int pageNumber = floor((appNumber-1)/AppsPerRow);
+static CGFloat calculateXPositionForAppNumber(int appNumber, int width, int appPerRow){
+	float spacing = (width - (AppIconSize*appPerRow) - (AppSpacing*2))/(appPerRow-1);
+	int pageNumber = floor((appNumber-1)/appPerRow);
 	int pageWidth = pageNumber*width;
-	if((appNumber-1) % AppsPerRow == 0)	return pageWidth + AppSpacing;
-	else	return pageWidth + AppSpacing + ((appNumber-(pageNumber*AppsPerRow))-1)*(AppIconSize+spacing);
+	if((appNumber-1) % appPerRow == 0)	return pageWidth + AppSpacing;
+	else	return pageWidth + AppSpacing + ((appNumber-(pageNumber*appPerRow))-1)*(AppIconSize+spacing);
 }
 
 #define Alert(TITLE,MSG) 		[[[UIAlertView alloc] initWithTitle:(TITLE) message:(MSG) delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show]
@@ -60,6 +61,8 @@ UIView 	 *lineView2			= nil;
 UIImageView  *lowBright     = nil;
 UIImageView  *highBright    = nil;
 
+
+static int appsPerRow = 5;
 static UISlider *brightnessSlider = nil;
 static UIScrollView *flipSwitchScrollView;
 
@@ -85,6 +88,9 @@ static UIScrollView *flipSwitchScrollView;
 
 - (void)viewDidLoad{
 	%orig;
+
+	NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:kSettingsPath];
+	SETINT(appsPerRow, "switchesPerPageNC", 5);
 
 	lowBright = [[UIImageView alloc] init];
 	lowBright.image = [[UIImage imageWithContentsOfFile:@"/Library/Application Support/Zeal/lowBright.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
@@ -137,6 +143,11 @@ static UIScrollView *flipSwitchScrollView;
 
 	NSBundle *templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/Zeal/ZealFSNC.bundle"];
 	NSArray *enabledSwitchesArray = [[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"];
+
+	if (enabledSwitchesArray == nil || [enabledSwitchesArray count] == 0) {
+		enabledSwitchesArray = [NSArray arrayWithObjects:@"com.a3tweaks.switch.airplane-mode", @"com.a3tweaks.switch.wifi", @"com.a3tweaks.switch.bluetooth", @"com.a3tweaks.switch.do-not-disturb", @"com.a3tweaks.switch.rotation-lock", nil];
+	}
+	
 	FSSwitchPanel *flipSwitchPanel = [FSSwitchPanel sharedPanel];
 
 	if ([enabledSwitchesArray count] > 0){
@@ -144,11 +155,20 @@ static UIScrollView *flipSwitchScrollView;
 		for(NSString *identifier in enabledSwitchesArray) {
 			UIButton *flipSwitchButton = [flipSwitchPanel buttonForSwitchIdentifier:identifier usingTemplate:templateBundle];
 			flipSwitchButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-			flipSwitchButton.frame = CGRectMake(calculateXPositionForAppNumber(i,size.width), 112.5, AppIconSize, AppIconSize);
+			flipSwitchButton.frame = CGRectMake(calculateXPositionForAppNumber(i,size.width,appsPerRow), 112.5, AppIconSize, AppIconSize);
 			[self.view addSubview:flipSwitchButton];
-			if(i == AppsPerRow) break;
+			if(i == appsPerRow) break;
 			i++;
 		}
+	}
+
+	if (dlopen("/Library/MobileSubstrate/DynamicLibraries/ColorBanners.dylib", RTLD_LAZY) && ([[[NSDictionary dictionaryWithContentsOfFile:kColorBannerSettingsPath] objectForKey:@"BannersEnabled"] boolValue] || [NSDictionary dictionaryWithContentsOfFile:kColorBannerSettingsPath] == nil)){
+		[lowBright setTintColor:[UIColor whiteColor]];
+		[highBright setTintColor:[UIColor whiteColor]];
+		brightnessSlider.tintColor = [UIColor whiteColor];
+		lineView2.backgroundColor = [UIColor whiteColor];
+		lineView.backgroundColor = [UIColor whiteColor];
+		powerSavingButton.backgroundColor = [UIColor colorWithRed:230.0/255 green:230.0/255 blue:230.0/255 alpha:0.5];
 	}
 }
 

@@ -8,6 +8,9 @@
 + (UIImage*)imageNamed:(NSString *)imageName inBundle:(NSBundle*)bundle;
 @end
 
-@interface ZealRootListController : PSListController
+@interface ZealRootListController : PSListController<UIAlertViewDelegate>{
+	UIDatePicker *fromPicker;
+	UIDatePicker *toPicker;
+}
 
 @end

@@ -7,33 +7,12 @@
 #import <substrate.h>
 #import <dlfcn.h>
 #import <BackBoardServices/BKSDisplayBrightness.h>
-#import <libobjcipc/objcipc.h>
 #import <SpringBoard/SpringBoard.h>
 #import <SpringBoard/SBApplication.h>
 
 #define SETBOOL(NAME,KEY,BOOL) (NAME) = ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] boolValue] : (BOOL))
 #define SETINT(NAME,KEY,INT) (NAME) = ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] integerValue] : (INT))
 #define SETTEXT(NAME,KEY) (NAME) = ([prefs objectForKey:@(KEY)] ? [prefs objectForKey:@(KEY)] : (NAME))
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
-
-#if defined(__cplusplus)
-}
-#endif
-
-@interface SBCCBrightnessSectionController : UIViewController
-@end
-
-@interface _CDBatterySaver : NSObject
-+ (id)batterySaver;
-- (int)getPowerMode;
-- (int)setMode:(int)arg1;
-- (BOOL)setPowerMode:(int)arg1 error:(id*)arg2;
-@end
 
 #define springBoard 					[NSClassFromString(@"SpringBoard") sharedApplication]
 #define powerSaver 						[NSClassFromString(@"_CDBatterySaver") batterySaver]
@@ -52,10 +31,49 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 #define kOBJCIPCServer1 @"com.rabih96.Zeal.orientation1"
 #define kOBJCIPCServer2 @"com.rabih96.Zeal.orientation2"
 
+static BKSDisplayBrightnessTransactionRef _transaction;
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
+
+#if defined(__cplusplus)
+}
+#endif
+
+@interface SBWallpaperController : NSObject
++ (id)sharedInstance;
+-(long long)activeOrientationSource;
+@end
+
+@interface SBCCBrightnessSectionController : UIViewController
+@end
+
+@interface UIImage (BBBulletin)
++(id)imageNamed:(id)named inBundle:(id)bundle;
+-(id)imageScaledToSize:(CGSize)size cornerRadius:(CGFloat)corenrasd;
+-(id)_imageScaledToProportion:(CGFloat)proportion interpolationQuality:(int)quality;
+-(id)imageResizedTo:(CGSize)size preserveAspectRatio:(BOOL)preserve;
+@end
+
+@interface UIApplication(ActivateSuspended)
+-(BOOL)launchApplicationWithIdentifier:(id)identifier suspended:(BOOL)s;
+@end
+
+@interface _CDBatterySaver : NSObject
++ (id)batterySaver;
+- (int)getPowerMode;
+- (int)setMode:(int)arg1;
+- (BOOL)setPowerMode:(int)arg1 error:(id*)arg2;
+@end
+
 @interface SBUserAgent : NSObject
 + (SBUserAgent *)sharedUserAgent;
 -(BOOL)deviceIsPasscodeLocked;
 -(BOOL)deviceIsLocked;
+- (void)undimScreen;
 @end
 
 @interface SBChevronView : UIView
@@ -139,6 +157,8 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 @interface SBAwayController : NSObject
 + (id)sharedAwayController;
 - (BOOL)isLocked;
+- (BOOL)isDimmed;
+- (void)attemptUnlockFromSource:(int)source;
 @end
 
 @interface SBUIController : NSObject
@@ -152,9 +172,15 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 - (int)curvedBatteryCapacityAsPercentage;
 @end
 
+@interface SBLockScreenViewController : NSObject
+- (BOOL)isInScreenOffMode;
+@end
+
 @interface SBLockScreenManager : NSObject // iOS 7
++ (id)sharedInstanceIfExists;
 + (id)sharedInstance;
 - (BOOL)isUILocked;
+- (SBLockScreenViewController *)lockScreenViewController;
 - (void)unlockUIFromSource:(NSInteger)source withOptions:(id)options;
 - (void)_finishUIUnlockFromSource:(NSInteger)source withOptions:(id)options;
 @end

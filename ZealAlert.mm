@@ -8,12 +8,12 @@
 @synthesize animate = _animate;
 @synthesize userInteraction = _userInteraction;
 
-static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
-	float spacing = (width - (AppIconSize*AppsPerRow) - (AppSpacing*2))/(AppsPerRow-1);
-	int pageNumber = floor((appNumber-1)/AppsPerRow);
+static CGFloat calculateXPositionForAppNumber(int appNumber, int width, int appPerRow){
+	float spacing = (width - (AppIconSize*appPerRow) - (AppSpacing*2))/(appPerRow-1);
+	int pageNumber = floor((appNumber-1)/appPerRow);
 	int pageWidth = pageNumber*width;
-	if((appNumber-1) % AppsPerRow == 0)	return pageWidth + AppSpacing;
-	else	return pageWidth + AppSpacing + ((appNumber-(pageNumber*AppsPerRow))-1)*(AppIconSize+spacing);
+	if((appNumber-1) % appPerRow == 0)	return pageWidth + AppSpacing;
+	else	return pageWidth + AppSpacing + ((appNumber-(pageNumber*appPerRow))-1)*(AppIconSize+spacing);
 }
 
 -(void)adjustViewForOrientation:(UIInterfaceOrientation)orientation animated:(BOOL)animateOrient {
@@ -74,6 +74,9 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 
 	//Drak mode option
 	darkMode = [[dict objectForKey:@"darkMode"] boolValue];
+
+	//Number of apps per page
+	appsPerRow = [[dict objectForKey:@"appsPerRow"] intValue];
 
 	//Main Window
 	zealWindow = [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, screenWidth, screenHeight)]; // window to display on screen
@@ -164,7 +167,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	brightnessSlider.minimumValue = 0.0;
 	brightnessSlider.maximumValue = 0.99;
 	brightnessSlider.tintColor = [UIColor grayColor];
-	[brightnessSlider addTarget:springBoard action:@selector(adjustBrightness:) forControlEvents:UIControlEventValueChanged];
+	[brightnessSlider addTarget:self action:@selector(adjustBrightness:) forControlEvents:UIControlEventValueChanged];
 	[alertView addSubview:brightnessSlider];
 
 	//Max brightness icon
@@ -183,6 +186,10 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	//Flip Switch buttons
 	NSBundle *templateBundle = nil;
 	NSArray *enabledSwitchesArray = [[NSDictionary dictionaryWithContentsOfFile:kSettingsPath] objectForKey:@"EnabledIdentifiers"];
+
+	if (enabledSwitchesArray == nil || [enabledSwitchesArray count] == 0) {
+		enabledSwitchesArray = [NSArray arrayWithObjects:@"com.a3tweaks.switch.airplane-mode", @"com.a3tweaks.switch.wifi", @"com.a3tweaks.switch.bluetooth", @"com.a3tweaks.switch.do-not-disturb", @"com.a3tweaks.switch.rotation-lock", nil];
+	}
 
 	if (darkMode){
 		templateBundle = [NSBundle bundleWithPath:@"/Library/Application Support/Zeal/ZealFSDark.bundle"];
@@ -204,12 +211,12 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 		int i = 1;
 		for(NSString *identifier in enabledSwitchesArray) {
 			UIButton *flipSwitchButton = [flipSwitchPanel buttonForSwitchIdentifier:identifier usingTemplate:templateBundle];
-			flipSwitchButton.frame = CGRectMake(calculateXPositionForAppNumber(i,310), (flipSwitchScrollView.frame.size.height-AppIconSize)/2, AppIconSize, AppIconSize);
+			flipSwitchButton.frame = CGRectMake(calculateXPositionForAppNumber(i,310,appsPerRow), (flipSwitchScrollView.frame.size.height-AppIconSize)/2, AppIconSize, AppIconSize);
 			[flipSwitchScrollView addSubview:flipSwitchButton];
 			i++;
 		}
 
-		flipSwitchScrollView.contentSize = CGSizeMake( ceil(enabledSwitchesArray.count/(AppsPerRow*1.0))*310, flipSwitchScrollView.frame.size.height);
+		flipSwitchScrollView.contentSize = CGSizeMake( ceil(enabledSwitchesArray.count/(appsPerRow*1.0))*310, flipSwitchScrollView.frame.size.height);
 		[alertView addSubview:flipSwitchScrollView];
 	}
 
@@ -220,7 +227,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[alertView addSubview:lineView3];
 
 	//Current amperage
-	currentAmps = [[UILabel alloc] initWithFrame:CGRectMake(10, 220, 165, 20)];
+	currentAmps = [[UILabel alloc] initWithFrame:CGRectMake(10, 220, 170, 20)];
 	currentAmps.font = [UIFont systemFontOfSize:12];
 	currentAmps.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	currentAmps.text = dict[@"currentCapacity"];
@@ -228,7 +235,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[alertView addSubview:currentAmps];
 
 	//Max amperage
-	maxAmps = [[UILabel alloc] initWithFrame:CGRectMake(10, 240, 165, 20)];
+	maxAmps = [[UILabel alloc] initWithFrame:CGRectMake(10, 240, 170, 20)];
 	maxAmps.font = [UIFont systemFontOfSize:12];
 	maxAmps.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	maxAmps.text = dict[@"maxCapacity"];
@@ -236,7 +243,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[alertView addSubview:maxAmps];
 
 	//Designed capacity
-	designAmps = [[UILabel alloc] initWithFrame:CGRectMake(10, 260, 165, 20)];
+	designAmps = [[UILabel alloc] initWithFrame:CGRectMake(10, 260, 170, 20)];
 	designAmps.font = [UIFont systemFontOfSize:12];
 	designAmps.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	designAmps.text = dict[@"designCapacity"];
@@ -244,7 +251,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[alertView addSubview:designAmps];
 
 	//Battery temperature
-	temprature = [[UILabel alloc] initWithFrame:CGRectMake(175, 220, 140, 20)];
+	temprature = [[UILabel alloc] initWithFrame:CGRectMake(180, 220, 140, 20)];
 	temprature.font = [UIFont systemFontOfSize:12];
 	temprature.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	temprature.text = dict[@"temprature"];
@@ -252,7 +259,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[alertView addSubview:temprature];
 
 	//Number of cycles
-	cycles = [[UILabel alloc] initWithFrame:CGRectMake(175, 240, 140, 20)];
+	cycles = [[UILabel alloc] initWithFrame:CGRectMake(180, 240, 140, 20)];
 	cycles.font = [UIFont systemFontOfSize:12];
 	cycles.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	cycles.text = dict[@"cycleCount"];
@@ -260,7 +267,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[alertView addSubview:cycles];
 
 	//Wear level
-	wearLevel = [[UILabel alloc] initWithFrame:CGRectMake(175, 260, 140, 20)];
+	wearLevel = [[UILabel alloc] initWithFrame:CGRectMake(180, 260, 140, 20)];
 	wearLevel.font = [UIFont systemFontOfSize:12];
 	wearLevel.textColor = darkMode ? [UIColor whiteColor] : [UIColor blackColor];
 	wearLevel.text = dict[@"wearLevel"];
@@ -287,24 +294,24 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 	[swiper addGestureRecognizer:tapGesture];
 
 	//Grabber view
-	_grabber = [[NSClassFromString(@"SBChevronView") alloc] initWithFrame:CGRectMake(137, 10, 36, 10)];
-	_grabber.transform = CGAffineTransformMakeRotation(M_PI);
-	[(SBChevronView *)_grabber setState:0 animated:NO];
-	_grabber.alpha = darkMode ? 0.5 : 0.75;
-	[_grabber setUserInteractionEnabled:NO];
-	[swiper addSubview:_grabber];
+	grabber = [[NSClassFromString(@"SBChevronView") alloc] initWithFrame:CGRectMake(137, 10, 36, 10)];
+	grabber.transform = CGAffineTransformMakeRotation(M_PI);
+	[(SBChevronView *)grabber setState:0 animated:NO];
+	grabber.alpha = darkMode ? 0.5 : 0.75;
+	[grabber setUserInteractionEnabled:NO];
+	[swiper addSubview:grabber];
 
 	if(darkMode){
 		messageLabel.textColor = [UIColor whiteColor];
 		titleLabel.textColor = [UIColor whiteColor];
 		//alertView.backgroundColor = RGBA(40,40,40,0.93);
 		[blurView transitionToPrivateStyle:2030];
-		[(SBChevronView *)_grabber setColor:[UIColor whiteColor]];
+		[(SBChevronView *)grabber setColor:[UIColor whiteColor]];
 	}else{
 		messageLabel.textColor = [UIColor blackColor];
 		titleLabel.textColor = [UIColor blackColor];
 		alertView.backgroundColor = RGBA(245,245,245,0.975);
-		[(SBChevronView *)_grabber setColor:[UIColor blackColor]];
+		[(SBChevronView *)grabber setColor:[UIColor blackColor]];
 	}
 
 	//Animation stuff
@@ -358,7 +365,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 
 - (void)swipeGesture:(UIPanGestureRecognizer *)panGestureRecognizer {
 	CGPoint currentPoint = [panGestureRecognizer locationInView:alertView];
-	[(SBChevronView *)_grabber setState:0 animated:YES];
+	[(SBChevronView *)grabber setState:0 animated:YES];
 
 	if ([panGestureRecognizer state] == UIGestureRecognizerStateChanged) {
 
@@ -403,7 +410,7 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 				wearLevel.alpha = 1.0;
 				lineView4.alpha = 0.25;
 			}];
-			[(SBChevronView *)_grabber setState:1 animated:YES];
+			[(SBChevronView *)grabber setState:1 animated:YES];
 
 		} else {
 
@@ -427,6 +434,22 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width){
 
 	}
 
+}
+
+-(void)adjustBrightness:(id)sender{
+	float brightness = [(UISlider *)sender value];
+	if([[[UIDevice currentDevice] systemVersion] floatValue] > 8.0){
+		if (_transaction == NULL) {
+			_transaction = BKSDisplayBrightnessTransactionCreate(kCFAllocatorDefault);
+		}
+		BKSDisplayBrightnessSet(brightness, 1);
+		if ([(UISlider *)sender isTracking] == NO && _transaction != NULL) {
+			CFRelease(_transaction);
+			_transaction = NULL;
+		}
+	}else{
+		[[UIScreen mainScreen] setBrightness:brightness];
+	}
 }
 
 -(void)_showAlert {

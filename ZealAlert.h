@@ -13,6 +13,7 @@ typedef void(^CompletionBlock)(void);
 	UIView *backgroundView;
 	UIView *alertView;
 	UIView *swiper;
+	UIView *grabber;
 	UIView *lineView;
 	UIView *lineView2;
 	UIView *lineView3;
@@ -45,11 +46,11 @@ typedef void(^CompletionBlock)(void);
 	UIButton *powerSavingButton;
 	UIScrollView *flipSwitchScrollView;
 	BOOL darkMode;
+	int appsPerRow;
 }
 
 @property (nonatomic) BOOL animate;
 @property (nonatomic) BOOL userInteraction;
-@property (nonatomic, retain) UIView *grabber;
 @property (nonatomic, strong) CompletionBlock completion;
 
 -(void)adjustViewForOrientation:(UIInterfaceOrientation)orientation animated:(BOOL)animateOrient;
