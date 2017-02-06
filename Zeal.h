@@ -580,3 +580,15 @@ __attribute__((weak_import)) @interface BBSectionIcon: NSObject
 - (int)terminationStatus;
 
 @end
+
+@interface SBUIChevronView : UIView
+
+- (void)setAnimationDuration:(double)arg1;
+- (void)setBackgroundView:(id)arg1;
+- (void)setColor:(id)arg1;
+- (void)setState:(long long)arg1;
+- (void)setState:(long long)arg1 animated:(bool)arg2;
+- (void)setVibrantSettings:(id)arg1;
+- (long long)state;
+
+@end

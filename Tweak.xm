@@ -211,7 +211,6 @@ static void showAlert(){
 	designCapacity		 	= [getValue_forKey(@"DesignCapacity") intValue];
 	temperature 			= [getValue_forKey(@"Temperature") intValue];
 	cycleCount 				= [getValue_forKey(@"CycleCount") intValue];
-	isCharging				= [[objc_getClass("SBUIController") sharedInstance] isOnAC];
 
 	getTitles();
 

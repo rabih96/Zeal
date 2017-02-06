@@ -294,9 +294,15 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width, int appP
 	[swiper addGestureRecognizer:tapGesture];
 
 	//Grabber view
-	grabber = [[NSClassFromString(@"SBChevronView") alloc] initWithFrame:CGRectMake(137, 10, 36, 10)];
+	if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
+		grabber = [[NSClassFromString(@"SBUIChevronView") alloc] initWithFrame:CGRectMake(137, 10, 36, 10)];
+		[(SBUIChevronView *)grabber setState:0 animated:NO];
+	}else{
+		grabber = [[NSClassFromString(@"SBChevronView") alloc] initWithFrame:CGRectMake(137, 10, 36, 10)];
+		[(SBChevronView *)grabber setState:0 animated:NO];
+	}
+
 	grabber.transform = CGAffineTransformMakeRotation(M_PI);
-	[(SBChevronView *)grabber setState:0 animated:NO];
 	grabber.alpha = darkMode ? 0.5 : 0.75;
 	[grabber setUserInteractionEnabled:NO];
 	[swiper addSubview:grabber];
@@ -306,12 +312,22 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width, int appP
 		titleLabel.textColor = [UIColor whiteColor];
 		//alertView.backgroundColor = RGBA(40,40,40,0.93);
 		[blurView transitionToPrivateStyle:2030];
-		[(SBChevronView *)grabber setColor:[UIColor whiteColor]];
+
+		if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
+			[(SBUIChevronView *)grabber setColor:[UIColor whiteColor]];
+		}else{
+			[(SBChevronView *)grabber setColor:[UIColor whiteColor]];
+		}
 	}else{
 		messageLabel.textColor = [UIColor blackColor];
 		titleLabel.textColor = [UIColor blackColor];
 		alertView.backgroundColor = RGBA(245,245,245,0.975);
-		[(SBChevronView *)grabber setColor:[UIColor blackColor]];
+
+		if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
+			[(SBUIChevronView *)grabber setColor:[UIColor blackColor]];
+		}else{
+			[(SBChevronView *)grabber setColor:[UIColor blackColor]];
+		}
 	}
 
 	//Animation stuff
@@ -365,7 +381,13 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width, int appP
 
 - (void)swipeGesture:(UIPanGestureRecognizer *)panGestureRecognizer {
 	CGPoint currentPoint = [panGestureRecognizer locationInView:alertView];
-	[(SBChevronView *)grabber setState:0 animated:YES];
+
+	if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
+		[(SBUIChevronView *)grabber setState:0 animated:YES];
+	}else{
+		[(SBChevronView *)grabber setState:0 animated:YES];
+	}
+
 
 	if ([panGestureRecognizer state] == UIGestureRecognizerStateChanged) {
 
@@ -410,7 +432,11 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width, int appP
 				wearLevel.alpha = 1.0;
 				lineView4.alpha = 0.25;
 			}];
-			[(SBChevronView *)grabber setState:1 animated:YES];
+			if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
+				[(SBUIChevronView *)grabber setState:1 animated:YES];
+			}else{
+				[(SBChevronView *)grabber setState:1 animated:YES];
+			}
 
 		} else {
 
