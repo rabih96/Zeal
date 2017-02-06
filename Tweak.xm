@@ -18,7 +18,6 @@
 #import "zealbannerui/FrontBoard.h"
 #import "JBBulletinManager.h"
 
-
 static NSMutableDictionary 				  *extensions;
 static NSUserDefaults					  *preferences;
 static SBBulletinBannerController 		  *bulletinBannerController;
@@ -161,6 +160,40 @@ static void getTitles(){
 
 }
 
+static NSString *getValue_forKey(NSString *key){
+
+	NSArray * args = @[@"-rd1", @"-c", @"AppleARMPMUCharger"];
+	NSTask * task = [NSTask new];
+	[task setLaunchPath:@"/usr/sbin/ioreg"];
+	[task setArguments:args];
+
+	NSPipe * pipe = [NSPipe new];
+	[task setStandardOutput:pipe];
+	[task launch];
+		
+	NSArray * args2 = @[@"-o", [NSString stringWithFormat:@"\"%@\" = [^ ]*", key]];
+	NSTask * task2 = [NSTask new];
+	[task2 setLaunchPath:@"/bin/grep"];
+	[task2 setArguments:args2];
+
+	NSPipe * pipe2 = [NSPipe new];
+	[task2 setStandardInput:pipe];
+	[task2 setStandardOutput:pipe2];
+	[task2 launch];
+
+	NSArray * args3 = @[@"-e", @"s/=//g", @"-e", @"s/\"//g", @"-e", @"s/ //g", @"-e", [NSString stringWithFormat:@"s/%@//", key]];
+	NSTask * task3 = [NSTask new];
+	[task3 setLaunchPath:@"/bin/sed"];
+	[task3 setArguments:args3];
+
+	NSPipe * pipe3 = [NSPipe new];
+	[task3 setStandardInput:pipe2];
+	[task3 setStandardOutput:pipe3];
+	[task3 launch];
+
+	return [[NSString alloc] initWithData:[[pipe3 fileHandleForReading] readDataToEndOfFile] encoding:NSUTF8StringEncoding];
+}
+
 static void removeAlert(){
 
 	if(zealAlert != nil) [zealAlert _hideAlert];
@@ -168,6 +201,17 @@ static void removeAlert(){
 }
 
 static void showAlert(){
+
+	externalChargeCapable 	= [getValue_forKey(@"ExternalChargeCapable") boolValue];
+	externalConnected 		= [getValue_forKey(@"ExternalConnected") boolValue];
+	fullyCharged			= [getValue_forKey(@"FullyCharged") boolValue];
+	currentCapacity 		= [getValue_forKey(@"AppleRawCurrentCapacity") intValue];
+	maxCapacity 			= [getValue_forKey(@"AppleRawMaxCapacity") intValue];
+	instantAmperage			= [getValue_forKey(@"InstantAmperage") intValue];
+	designCapacity		 	= [getValue_forKey(@"DesignCapacity") intValue];
+	temperature 			= [getValue_forKey(@"Temperature") intValue];
+	cycleCount 				= [getValue_forKey(@"CycleCount") intValue];
+	isCharging				= [[objc_getClass("SBUIController") sharedInstance] isOnAC];
 
 	getTitles();
 
@@ -201,6 +245,8 @@ static void showAlert(){
 		
 		if (customSD) AudioServicesPlaySystemSound(soundPicked);	
 	}
+
+	//[[NSClassFromString(@"UNUserNotificationServiceConnection") sharedInstance] addNotificationRequest:[NSClassFromString(@"UNNotificationRequest") requestWithIdentifier:@"test" content:[[NSClassFromString(@"UNMutableNotificationContent") alloc] init] trigger:[NSClassFromString(@"UNTimeIntervalNotificationTrigger") triggerWithTimeInterval:0.f repeats:NO]] forBundleIdentifier:@"com.apple.Preferences" withCompletionHandler:nil];
 
 }
 
@@ -412,6 +458,7 @@ static void loadSettings(){
 %end
 
 %group Zeal
+
 %hook SpringBoard
 
 /*-(BOOL)isPoweringDown{
@@ -444,18 +491,65 @@ static void loadSettings(){
 	}
 }
 
+- (void)_batterySaverModeChanged:(int)arg1{
+
+	%orig;
+
+	//Update the info on the alert if visible
+	if (zealAlert != nil){
+		getTitles();
+
+		[zealAlert updateData:@{
+			@"alertTitle" : titleA,
+			@"alertMessage" : messageA,
+			@"isCharging" : [NSNumber numberWithBool:isCharging],
+			@"currentCapacity" : [NSString stringWithFormat:@"Current Capacity: %.0f mAh", (float) currentCapacity],
+			@"maxCapacity" : [NSString stringWithFormat:@"Max Capacity: %.0f mAh",(float) maxCapacity],
+			@"designCapacity" : [NSString stringWithFormat:@"Design Capacity: %.0f mAh",(float) designCapacity],
+			@"temprature" : [NSString stringWithFormat:@"Temperature: %.1f°C", (float) temperature / 100],
+			@"cycleCount" : [NSString stringWithFormat:@"Cycles: %.0f", (float) cycleCount],
+			@"wearLevel" : [NSString stringWithFormat:@"Wear Level: %.0f", (1.0 - ((float) maxCapacity / designCapacity)) * 100],
+			@"darkMode" : [NSNumber numberWithBool:darkModeAlert()],
+			@"appsPerRow" : [NSNumber numberWithInt:switchesPerPage],
+
+		}];
+	}
+}
+
 - (void)batteryStatusDidChange:(id)batteryStatus{
 
-	currentCapacity 		= [[batteryStatus objectForKey:@"AppleRawCurrentCapacity"] intValue];
-	maxCapacity 			= [[batteryStatus objectForKey:@"AppleRawMaxCapacity"] intValue];
-	instantAmperage			= [[batteryStatus objectForKey:@"InstantAmperage"] intValue];
-	designCapacity		 	= [[batteryStatus objectForKey:@"DesignCapacity"] intValue];
-	temperature 			= [[batteryStatus objectForKey:@"Temperature"] intValue];
-	cycleCount 				= [[batteryStatus objectForKey:@"CycleCount"] intValue];
-	externalChargeCapable 	= [[batteryStatus objectForKey:@"ExternalChargeCapable"] boolValue];
-	externalConnected 		= [[batteryStatus objectForKey:@"ExternalConnected"] boolValue];
-	fullyCharged			= [[batteryStatus objectForKey:@"FullyCharged"] boolValue];
-	isCharging				= [[objc_getClass("SBUIController") sharedInstance] isOnAC];
+	//iOS 9
+	if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"9.0.0") && SYSTEM_VERSION_LESS_THAN(@"10.0.0")){
+		externalChargeCapable 	= [[batteryStatus objectForKey:@"ExternalChargeCapable"] boolValue];
+		externalConnected 		= [[batteryStatus objectForKey:@"ExternalConnected"] boolValue];
+		fullyCharged			= [[batteryStatus objectForKey:@"FullyCharged"] boolValue];
+		isCharging				= [[objc_getClass("SBUIController") sharedInstance] isOnAC];
+		currentCapacity 		= [[batteryStatus objectForKey:@"AppleRawCurrentCapacity"] intValue];
+		maxCapacity 			= [[batteryStatus objectForKey:@"AppleRawMaxCapacity"] intValue];
+		instantAmperage			= [[batteryStatus objectForKey:@"InstantAmperage"] intValue];
+		designCapacity		 	= [[batteryStatus objectForKey:@"DesignCapacity"] intValue];
+		temperature 			= [[batteryStatus objectForKey:@"Temperature"] intValue];
+		cycleCount 				= [[batteryStatus objectForKey:@"CycleCount"] intValue];
+	}
+
+	/*//iOS 10
+	if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
+	    
+	    HBLogDebug(@"CycleCount: %@", getValue_forKey(@"CycleCount"));
+	    HBLogDebug(@"InstantAmperage: %@", getValue_forKey(@"InstantAmperage"));
+	    HBLogDebug(@"DesignCapacity: %@", getValue_forKey(@"DesignCapacity"));
+
+		externalChargeCapable 	= [[batteryStatus objectForKey:@"ExternalChargeCapable"] boolValue];
+		externalConnected 		= [[batteryStatus objectForKey:@"ExternalConnected"] boolValue];
+		fullyCharged			= [[batteryStatus objectForKey:@"FullyCharged"] boolValue];
+		isCharging				= [[objc_getClass("SBUIController") sharedInstance] isOnAC];
+		currentCapacity 		= [[batteryStatus objectForKey:@"AppleRawCurrentCapacity"] intValue];
+		maxCapacity 			= [[batteryStatus objectForKey:@"AppleRawMaxCapacity"] intValue];
+		instantAmperage			= [[batteryStatus objectForKey:@"InstantAmperage"] intValue];
+		designCapacity		 	= [[batteryStatus objectForKey:@"DesignCapacity"] intValue];
+		temperature 			= [[batteryStatus objectForKey:@"Temperature"] intValue];
+		cycleCount 				= [[batteryStatus objectForKey:@"CycleCount"] intValue];
+	}*/
 
 	%orig;
 
@@ -536,7 +630,6 @@ static void loadSettings(){
 %end
 
 %ctor{
-
 	%init(shared);
 
 	loadSettings();

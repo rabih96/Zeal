@@ -1,0 +1,60 @@
+Rabihs-iPhone:~ root# ioreg -n AppleARMPMUCharger -rd1                                 
++-o AppleARMPMUCharger  <class AppleARMPMUCharger, registered, matched, active, busy 0, retain 10>
+    {
+      "BatteryFCCData" = {"DOD0"=8256,"PassedCharge"=457,"Qstart"=1360,"ResScale"=0}
+      "AtCriticalLevel" = No
+      "IOProviderClass" = "IOService"
+      "AdapterInfo" = 16384
+      "AbsoluteCapacity" = 915
+      "BestAdapterIndex" = 0
+      "IsCharging" = Yes
+      "IOClass" = "AppleARMPMUCharger"
+      "built-in" = Yes
+      "AppleRawAdapterDetails" = ({"Description"="usb host","Watts"=2,"FamilyCode"=18446744073172697088,"PMUConfiguration"=490,"Amperage"=500,"AdapterVoltage"=5000})
+      "ExternalConnected" = Yes
+      "IOGeneralInterest" = "IOCommand is not serializable"
+      "IOReportLegendPublic" = Yes
+      "IONameMatch" = "charger"
+      "AppleRawMaxCapacity" = 2620
+      "FullyCharged" = No
+      "NominalChargeCapacity" = 2647
+      "UpdateTime" = 1486411976
+      "ExternalChargeCapable" = Yes
+      "CFBundleIdentifier" = "com.apple.driver.AppleARMPlatform"
+      "AdapterDetails" = {"Description"="usb host","Watts"=2,"FamilyCode"=18446744073172697088,"PMUConfiguration"=490,"Amperage"=500,"AdapterVoltage"=5000}
+      "BatteryKey" = "0003-default"
+      "DesignCapacity" = 2855
+      "BootVoltage" = 3880
+      "Model" = "0003-F"
+      "IONameMatched" = "charger"
+      "AppleRawExternalConnected" = Yes
+      "CycleCount" = 531
+      "Serial" = "F8Y441557SSFTHLE2"
+      "Temperature" = 2400
+      "BootBBCapacity" = 1330
+      "IOPowerManagement" = {"CurrentPowerState"=2,"DevicePowerState"=2,"MaxPowerState"=2,"CapabilityFlags"=32832}
+      "Voltage" = 3838
+      "ChargerData" = {"ChargingCurrent"=174,"ChargerAlert"=0,"ChargerStatus"=112,"ChargingVoltage"=133,"UpdateTime"=1486411976,"NotChargingReason"=0}
+      "ChargerConfiguration" = 1740
+      "BatteryInstalled" = Yes
+      "InstantAmperage" = 383
+      "IOReportLegend" = ({"IOReportGroupName"="Battery","IOReportChannelInfo"={"IOReportChannelUnit"=0},"IOReportChannels"=((7881712903662169456,6460407809,"BatteryMaxTemp"),(7883953708359576944,6460407809,"BatteryMinTemp"),(78817$
+      "AppleChargeRateLimitIndex" = 0
+      "AppleRawBrickIDVoltages" = ((39,39))
+      "Amperage" = 500
+      "AtWarnLevel" = No
+      "Manufacturer" = "F"
+      "IOMatchCategory" = "IODefaultMatchCategory"
+      "PresentDOD" = 10962
+      "battery-data" = {"0005-default"=<000064000000ffff00006300e74174100000620030e1581000006100416b4b100000600084ed3e1000005f00998e331000005e000d12291000005d003dba1d1000005c002125131000005b00825e081000005a003ab5fe0f000059008ad6f30$
+      "MaxCapacity" = 2700
+      "CurrentCapacity" = 864
+      "IOProbeScore" = 1000
+      "AppleRawCurrentCapacity" = 803
+      "BootCapacityEstimate" = 51
+      "Location" = 0
+      "TimeRemaining" = 0
+      "BatteryData" = {"CycleCount"=531,"MaxCapacity"=2620,"FullAvailableCapacity"=2652,"StateOfCharge"=27,"DesignCapacity"=2855,"Voltage"=3751,"MfgData"="Raw","QmaxCell0"=2766,"Flags"=1,"ManufactureDate"="Y441","ChemID"=12674,"Bat$
+      "IOFunctionParent8B000000" = <>
+    }
+    

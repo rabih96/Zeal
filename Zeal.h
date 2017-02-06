@@ -5,14 +5,27 @@
 #import <CaptainHook/CaptainHook.h>
 #import <Flipswitch/Flipswitch.h>
 #import <substrate.h>
-#import <dlfcn.h>
+#include <dlfcn.h>
 #import <BackBoardServices/BKSDisplayBrightness.h>
 #import <SpringBoard/SpringBoard.h>
 #import <SpringBoard/SBApplication.h>
 
-#define SETBOOL(NAME,KEY,BOOL) (NAME) = ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] boolValue] : (BOOL))
-#define SETINT(NAME,KEY,INT) (NAME) = ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] integerValue] : (INT))
-#define SETTEXT(NAME,KEY) (NAME) = ([prefs objectForKey:@(KEY)] ? [prefs objectForKey:@(KEY)] : (NAME))
+#import "UNUserNotificationCenter.h"
+
+#include <IOKit/IOKitLib.h>
+#include <IOKit/IOPowerSources.h>
+#include <IOKit/IOPSKeys.h>
+#include <IOKit/IOPM.h>
+
+#define SETBOOL(NAME,KEY,BOOL) (NAME) 	= ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] boolValue] : (BOOL))
+#define SETINT(NAME,KEY,INT) (NAME) 	= ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] integerValue] : (INT))
+#define SETTEXT(NAME,KEY) (NAME) 		= ([prefs objectForKey:@(KEY)] ? [prefs objectForKey:@(KEY)] : (NAME))
+
+#define SYSTEM_VERSION_EQUAL_TO(v)                  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
+#define SYSTEM_VERSION_GREATER_THAN(v)              ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
+#define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v)  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)
+#define SYSTEM_VERSION_LESS_THAN(v)                 ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
+#define SYSTEM_VERSION_LESS_THAN_OR_EQUAL_TO(v)     ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedDescending)
 
 #define springBoard 					[NSClassFromString(@"SpringBoard") sharedApplication]
 #define powerSaver 						[NSClassFromString(@"_CDBatterySaver") batterySaver]
@@ -42,6 +55,30 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 #if defined(__cplusplus)
 }
 #endif
+
+@interface PLBatteryPropertiesEntry : NSObject
++ (id)batteryPropertiesEntry;
+@property(readonly, nonatomic) BOOL draining;
+@property(readonly, nonatomic) BOOL isPluggedIn;
+@property(readonly, nonatomic) NSString *chargingState;
+@property(readonly, nonatomic) int batteryTemp;
+@property(readonly, nonatomic) NSNumber *connectedStatus;
+@property(readonly, nonatomic) NSNumber *adapterInfo;
+@property(readonly, nonatomic) int chargingCurrent;
+@property(readonly, nonatomic) BOOL fullyCharged;
+@property(readonly, nonatomic) BOOL isCharging;
+@property(readonly, nonatomic) int cycleCount;
+@property(readonly, nonatomic) int designCapacity;
+@property(readonly, nonatomic) double rawMaxCapacity;
+@property(readonly, nonatomic) double maxCapacity;
+@property(readonly, nonatomic) double rawCurrentCapacity;
+@property(readonly, nonatomic) double currentCapacity;
+@property(readonly, nonatomic) int current;
+@property(readonly, nonatomic) int voltage;
+@property(readonly, nonatomic) BOOL isCritical;
+@property(readonly, nonatomic) double rawCapacity;
+@property(readonly, nonatomic) double capacity;
+@end
 
 @interface SBWallpaperController : NSObject
 + (id)sharedInstance;
@@ -488,4 +525,58 @@ __attribute__((weak_import)) @interface BBSectionIconVariant: NSObject
 
 __attribute__((weak_import)) @interface BBSectionIcon: NSObject
 - (void)addVariant:(BBSectionIconVariant *)variant;
+@end
+
+
+@interface NSTask : NSObject
+
+// Create an NSTask which can be run at a later time
+// An NSTask can only be run once. Subsequent attempts to
+// run an NSTask will raise.
+// Upon task death a notification will be sent
+//   { Name = NSTaskDidTerminateNotification; object = task; }
+//
+
+- (id)init;
+
+// set parameters
+// these methods can only be done before a launch
+- (void)setLaunchPath:(NSString *)path;
+- (void)setArguments:(NSArray *)arguments;
+- (void)setEnvironment:(NSDictionary *)dict;
+	// if not set, use current
+- (void)setCurrentDirectoryPath:(NSString *)path;
+	// if not set, use current
+
+// set standard I/O channels; may be either an NSFileHandle or an NSPipe
+- (void)setStandardInput:(id)input;
+- (void)setStandardOutput:(id)output;
+- (void)setStandardError:(id)error;
+
+// get parameters
+- (NSString *)launchPath;
+- (NSArray *)arguments;
+- (NSDictionary *)environment;
+- (NSString *)currentDirectoryPath;
+
+// get standard I/O channels; could be either an NSFileHandle or an NSPipe
+- (id)standardInput;
+- (id)standardOutput;
+- (id)standardError;
+
+// actions
+- (void)launch;
+
+- (void)interrupt; // Not always possible. Sends SIGINT.
+- (void)terminate; // Not always possible. Sends SIGTERM.
+
+- (BOOL)suspend;
+- (BOOL)resume;
+
+// status
+- (int)processIdentifier; 
+- (BOOL)isRunning;
+
+- (int)terminationStatus;
+
 @end

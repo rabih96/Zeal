@@ -1,6 +1,6 @@
 Package: com.rabih96.Zeal
 Name: Zeal
-Depends: mobilesubstrate, com.a3tweaks.flipswitch, net.limneos.libbulletin
+Depends: mobilesubstrate, com.a3tweaks.flipswitch
 Version: 1.0
 Architecture: iphoneos-arm
 Description: Take control over your battery alerts
