@@ -19,4 +19,5 @@ after-install::
 	install.exec "killall -9 backboardd"
 SUBPROJECTS += zeal
 SUBPROJECTS += zealbannerui
+#SUBPROJECTS += zealbannerui10
 include $(THEOS_MAKE_PATH)/aggregate.mk
