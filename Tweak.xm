@@ -142,21 +142,30 @@ static void getTitles(){
 
 	if (isCharging){
 		messageA = [NSString stringWithFormat:@"Time left to charge ≅ %@", formatTimeFromSeconds((int)roundf( (float)(maxCapacity - currentCapacity) / abs(instantAmperage) * 2520.0 ))];
+		messageB = [NSString stringWithFormat:@"Time left to charge ≅ %@", formatTimeFromSeconds((int)roundf( (float)(maxCapacity - currentCapacity) / abs(instantAmperage) * 2520.0 ))];
+		if(fullyCharged || (int)roundf( (float)currentCapacity / abs(instantAmperage) * 2520.0 ) <= 60 ){
+			messageA = @"Unplug device from charger";
+			messageB = @"Unplug device from charger";
+		}
 	}else{
 		messageA = [NSString stringWithFormat:@"Usage time left ≅ %@", formatTimeFromSeconds((int)roundf( (float)currentCapacity / abs(instantAmperage) * 2520.0 ))];
 	}
 
-	if(calculatedBattery){
-		messageB = [NSString stringWithFormat:@"%d%% of battery remaining", (int)roundf( ((float) currentCapacity / maxCapacity) * 100 )];
-		messageA = estimateTimeLeft ? messageA : messageB;
-		titleA = estimateTimeLeft ? ([NSString stringWithFormat:@"%@ %.0f%%", titleB, ((float) currentCapacity / maxCapacity) * 100]) : (titleB);
+	if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
+			messageB = isCharging ? messageB : [NSString stringWithFormat:@"%ld%% of battery remaining", (long)batteryLevel];
+			messageA = isCharging ? messageA : messageB;
+			titleA = isCharging ? ([NSString stringWithFormat:@"%@ %ld%%", titleB, (long)batteryLevel]) : (titleB);
 	}else{
-		messageB = [NSString stringWithFormat:@"%ld%% of battery remaining", (long)batteryLevel];
-		messageA = estimateTimeLeft ? messageA : messageB;
-		titleA = estimateTimeLeft ? ([NSString stringWithFormat:@"%@ %ld%%", titleB, (long)batteryLevel]) : (titleB);
+		if(calculatedBattery){
+			messageB = [NSString stringWithFormat:@"%d%% of battery remaining", (int)roundf( ((float) currentCapacity / maxCapacity) * 100 )];
+			messageA = estimateTimeLeft ? messageA : messageB;
+			titleA = estimateTimeLeft ? ([NSString stringWithFormat:@"%@ %.0f%%", titleB, ((float) currentCapacity / maxCapacity) * 100]) : (titleB);
+		}else{
+			messageB = [NSString stringWithFormat:@"%ld%% of battery remaining", (long)batteryLevel];
+			messageA = estimateTimeLeft ? messageA : messageB;
+			titleA = estimateTimeLeft ? ([NSString stringWithFormat:@"%@ %ld%%", titleB, (long)batteryLevel]) : (titleB);
+		}
 	}
-
-	if(fullyCharged && isCharging) (messageA = messageB) = @"Unplug device from charger";
 
 }
 
@@ -249,6 +258,22 @@ static void showAlert(){
 
 }
 
+static inline id notificationController(){
+	
+	SBLockScreenNotificationListController *lockScreenNotificationListController=([[objc_getClass("UIApplication") sharedApplication] respondsToSelector:@selector(notificationDispatcher)] && [[[objc_getClass("UIApplication") sharedApplication] notificationDispatcher] respondsToSelector:@selector(notificationSource)]) ? [[[objc_getClass("UIApplication") sharedApplication] notificationDispatcher] notificationSource]  : [[[objc_getClass("SBLockScreenManager") sharedInstanceIfExists] lockScreenViewController] valueForKey:@"notificationController"];
+	return lockScreenNotificationListController;
+
+}
+
+static inline NSString *getUUID(){
+
+	CFUUIDRef uuidObject = CFUUIDCreate(kCFAllocatorDefault);
+	NSString *uuidStr = (__bridge NSString *)CFUUIDCreateString(kCFAllocatorDefault, uuidObject);
+	CFRelease(uuidObject);
+	return uuidStr;
+	
+}
+
 static inline void presentController() {
 
 	bulletinBannerController = (SBBulletinBannerController *)[NSClassFromString(@"SBBulletinBannerController") sharedInstance];
@@ -257,25 +282,35 @@ static inline void presentController() {
 	bulletin.sectionID = @"com.apple.Preferences";
 	bulletin.title = titleB;
 	bulletin.message = messageB;
+	bulletin.bulletinID= getUUID();
+	bulletin.bulletinVersionID= getUUID();
+	bulletin.recordID= getUUID();
+	[bulletin setClearable:YES];
 
-	if(pullDown){
-		BBAction *action = [BBAction actionWithIdentifier:@"ZealActionIdentifier"];
-		action.actionType = 7;
-		action.appearance = [BBAppearance appearanceWithTitle:@"Zeal"];
-		action.remoteServiceBundleIdentifier = @"com.apple.mobilesms.notification";
-		action.remoteViewControllerClassName = @"ZealBannerViewController";
-		action.authenticationRequired = NO;
-		action.activationMode = 1;
-		[bulletin setSupplementaryActions:@[action]];
+	if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
+
+		SBLockScreenNotificationListController *listController = notificationController();
+		[listController observer:[bulletinBannerController valueForKey:@"observer"] addBulletin:bulletin forFeed:2 playLightsAndSirens:YES withReply:nil];
+
+	}else{
+		if(pullDown){
+			BBAction *action = [BBAction actionWithIdentifier:@"ZealActionIdentifier"];
+			action.actionType = 7;
+			action.appearance = [BBAppearance appearanceWithTitle:@"Zeal"];
+			action.remoteServiceBundleIdentifier = @"com.apple.mobilesms.notification";
+			action.remoteViewControllerClassName = @"ZealBannerViewController";
+			action.authenticationRequired = NO;
+			action.activationMode = 1;
+			[bulletin setSupplementaryActions:@[action]];
+		}
+		[bulletinBannerController observer:[bulletinBannerController valueForKey:@"observer"] addBulletin:bulletin forFeed:2 playLightsAndSirens:YES withReply:nil];
 	}
-
-	[bulletinBannerController observer:nil addBulletin:bulletin forFeed:2 playLightsAndSirens:YES withReply:nil];
 
 	if (customSD) AudioServicesPlaySystemSound(soundPicked);
 
 }
 
-static void dissmissBanner(){
+static void dismissBanner(){
 
 	if (bannerController._bannerContext != nil) {
 		dispatch_async(dispatch_get_main_queue(), ^{
@@ -292,10 +327,10 @@ static void showBanner(){
 	bannerController = (SBBannerController *)[NSClassFromString(@"SBBannerController") sharedInstance];
 
 	if (bannerController._bannerContext && [bannerController._bannerContext.item respondsToSelector:@selector(seedBulletin)]) {
-		dissmissBanner();
+		dismissBanner();
 	} else {
 		if (bannerController.isShowingBanner || bannerController.isShowingModalBanner) {
-			dissmissBanner();
+			dismissBanner();
 			dispatchAfter(0.3, ^{ presentController(); });
 		} else {
 			if (bannerController._bannerContext == nil) presentController();
@@ -417,6 +452,35 @@ static void loadSettings(){
 
 %end
 
+%hook NCNotificationLongLookViewController
+
+-(void)viewWillLayoutSubviews {
+	%orig;
+
+	if ([[[[self view] class] description] isEqualToString:@"_NCNotificationViewControllerView"]) {
+		NCNotificationLongLookView *view = [(_NCNotificationViewControllerView *)[self view] contentView];
+
+		if ([[[[self notificationRequest] bulletin] section] isEqualToString:@"com.apple.Preferences"] && [[view interfaceActions] count] == 0) {
+			UIInterfaceAction *showAlertAction = [%c(UIInterfaceAction) actionWithTitle:@"Show alert" type:0 handler:^{
+				[self _handleCloseButton:nil];
+				showAlert();
+			}];
+
+			UIInterfaceAction *powerSavingModeAction = [%c(UIInterfaceAction) actionWithTitle:([powerSaver getPowerMode] == 1) ? @"Deactivate battery saving mode" : @"Activate battery saving mode" type:0 handler:^{
+				[self _handleCloseButton:nil];
+				powerSavingModeSwitch();
+			}];
+
+			NSMutableArray *actions = [[NSMutableArray alloc] initWithCapacity:2];
+			[actions addObject:powerSavingModeAction];
+			[actions addObject:showAlertAction];
+			[view setInterfaceActions:[actions copy]];
+		}
+	}
+}
+
+%end
+
 %hook BBBulletinRequest
 
 -(UIImage *)sectionIconImageWithFormat:(int)aformat{
@@ -531,25 +595,6 @@ static void loadSettings(){
 		cycleCount 				= [[batteryStatus objectForKey:@"CycleCount"] intValue];
 	}
 
-	/*//iOS 10
-	if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
-	    
-	    HBLogDebug(@"CycleCount: %@", getValue_forKey(@"CycleCount"));
-	    HBLogDebug(@"InstantAmperage: %@", getValue_forKey(@"InstantAmperage"));
-	    HBLogDebug(@"DesignCapacity: %@", getValue_forKey(@"DesignCapacity"));
-
-		externalChargeCapable 	= [[batteryStatus objectForKey:@"ExternalChargeCapable"] boolValue];
-		externalConnected 		= [[batteryStatus objectForKey:@"ExternalConnected"] boolValue];
-		fullyCharged			= [[batteryStatus objectForKey:@"FullyCharged"] boolValue];
-		isCharging				= [[objc_getClass("SBUIController") sharedInstance] isOnAC];
-		currentCapacity 		= [[batteryStatus objectForKey:@"AppleRawCurrentCapacity"] intValue];
-		maxCapacity 			= [[batteryStatus objectForKey:@"AppleRawMaxCapacity"] intValue];
-		instantAmperage			= [[batteryStatus objectForKey:@"InstantAmperage"] intValue];
-		designCapacity		 	= [[batteryStatus objectForKey:@"DesignCapacity"] intValue];
-		temperature 			= [[batteryStatus objectForKey:@"Temperature"] intValue];
-		cycleCount 				= [[batteryStatus objectForKey:@"CycleCount"] intValue];
-	}*/
-
 	%orig;
 
 	//Update the info on the alert if visible
@@ -573,8 +618,13 @@ static void loadSettings(){
 
 	if (fullyCharged && notifyWhenFull) {
 	    dispatch_once (&onceToken, ^{
-	    	getTitles();
-			[[objc_getClass("JBBulletinManager") sharedInstance] showBulletinWithTitle:@"Full Battery" message:@"Unplug device from charger" overrideBundleImage:[UIImage imageWithContentsOfFile:@"/Library/Application Support/Zeal/batteryBanner.png"] soundPath:[[NSBundle bundleWithIdentifier:@"com.apple.UIKit"] pathForResource:@"Tock" ofType:@"aiff"]];
+	    	/*getTitles();
+	    	if(SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10.0.0")){
+				[[objc_getClass("JBBulletinManager") sharedInstance] showBulletinWithTitle:@"Full Battery" message:@"Unplug device from charger" overrideBundleImage:[UIImage imageWithContentsOfFile:@"/Library/Application Support/Zeal/batteryBanner.png"]];
+	    	}else{
+	    		[[objc_getClass("JBBulletinManager") sharedInstance] showBulletinWithTitle:@"Full Battery" message:@"Unplug device from charger" bundleID:@"com.apple.Preferences"];
+	    	}*/
+	    	showBanner();
 	    });
 	}
 }
@@ -595,6 +645,16 @@ static void loadSettings(){
 }
 
 -(void)handleMenuDoubleTap {
+	removeAlert();
+	%orig;
+}
+
+-(void)_simulateLockButtonPress{
+	removeAlert();
+	%orig;
+}
+
+-(void)_simulateHomeButtonPress{
 	removeAlert();
 	%orig;
 }
@@ -629,6 +689,7 @@ static void loadSettings(){
 %end
 
 %ctor{
+
 	%init(shared);
 
 	loadSettings();
@@ -638,7 +699,7 @@ static void loadSettings(){
 		%init(Zeal);
 		
 		CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)loadSettings, CFSTR(PreferencesChangedNotification), NULL, CFNotificationSuspensionBehaviorCoalesce);
-		CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)dissmissBanner, CFSTR(kRemoveBanner), NULL, 0);
+		CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)dismissBanner, CFSTR(kRemoveBanner), NULL, 0);
 		CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)ZealAction, CFSTR(kShowAlert), NULL, 0);
 		CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)powerSavingModeSwitch, CFSTR(kPowerSaverMde), NULL, 0);
 		CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(),	NULL, changeBrightness,	CFSTR(kChangeBrightness), NULL,	CFNotificationSuspensionBehaviorDeliverImmediately);

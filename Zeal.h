@@ -9,6 +9,8 @@
 #import <BackBoardServices/BKSDisplayBrightness.h>
 #import <SpringBoard/SpringBoard.h>
 #import <SpringBoard/SBApplication.h>
+#include "objc/runtime.h"
+#include "notify.h"
 
 #import "UNUserNotificationCenter.h"
 
@@ -121,12 +123,6 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 
 @interface SBControlCenterGrabberView : UIView
 - (SBChevronView *)chevronView;
-@end
-
-@interface UIApplication ()
-- (id)_mainScene;
-- (id)_keyWindowForScreen:(id)arg1;
-- (SBApplication*) _accessibilityFrontMostApplication;
 @end
 
 @interface SBStatusBarStateAggregator
@@ -245,6 +241,8 @@ extern void BBDataProviderSetApplicationBadgeString(BBDataProvider *dataProvider
 @interface BBAppearance : NSObject
 @property (copy, nonatomic) NSString *title;
 + (instancetype)appearanceWithTitle:(NSString *)title;
+-(NSString *)viewClassName;
+-(void)setViewClassName:(NSString *)arg1 ;
 @end
 
 @interface BBAction : NSObject
@@ -285,16 +283,47 @@ extern void BBDataProviderSetApplicationBadgeString(BBDataProvider *dataProvider
 - (NSArray *)_allActions;
 - (NSArray *)_allSupplementaryActions;
 - (NSArray *)supplementaryActions;
+- (NSString *)section;
 - (NSArray *)supplementaryActionsForLayout:(NSInteger)layout;
 @end
 
 @interface BBBulletinRequest : BBBulletin
+@property (nonatomic,retain) NSString *bulletinID; 
+@property (nonatomic,retain) NSString *title; 
+@property (nonatomic,retain) NSString *subtitle; 
+@property (nonatomic,retain) NSString *message; 
+@property (nonatomic,retain) NSString *sectionID;
+@property (nonatomic,retain) NSString *section; 
+@property (nonatomic,retain) NSDictionary *context; 
+@property (nonatomic,retain) id unlockActionLabel;
+@property (nonatomic,retain) NSDate *date; 
+@property (nonatomic,retain) NSDate *lastInterruptDate; 
+@property (nonatomic,retain) NSDate *recencyDate; 
+@property (nonatomic,retain) NSDate *endDate; 
+@property (nonatomic,retain) NSDate *publicationDate; 
+@property (nonatomic,assign) BOOL hasEventDate; 
+@property (nonatomic,assign) BOOL clearable; 
+@property (nonatomic,assign) int dateFormatStyle;
+@property (nonatomic,assign) int messageNumberOfLines;
+@property (nonatomic,assign) int sectionSubtype;
+@property (nonatomic,assign) BOOL showsMessagePreview; 
+@property (nonatomic,assign) BOOL suppressesMessageForPrivacy; 
+@property (nonatomic,retain) NSString *unlockActionLabelOverride; 
+@property (nonatomic,retain) NSString *bulletinVersionID; 
+@property (nonatomic,retain) NSTimeZone *timeZone;
+@property (assign,nonatomic) BOOL dateIsAllDay;
+@property (nonatomic,retain) NSString *recordID;
+@property (nonatomic,retain) NSString *publisherBulletinID;
 - (void)setContextValue:(id)value forKey:(NSString *)key;
 - (void)setSupplementaryActions:(NSArray *)actions;
 - (void)setSupplementaryActions:(NSArray *)actions forLayout:(NSInteger)layout;
 - (void)generateNewBulletinID;
 @end
 
+@interface BBObserver: NSObject
+-(void)_setAttachmentImage:(id)image forKey:(id)akwy forBulletinID:(id)bullid;
+-(void)_setAttachmentSize:(CGSize)size forKey:(id)akwy forBulletinID:(id)bullid;
+@end
 
 @interface BBServer : NSObject
 - (BBDataProvider *)dataProviderForSectionID:(NSString *)sectionID;
@@ -325,6 +354,18 @@ extern void BBDataProviderSetApplicationBadgeString(BBDataProvider *dataProvider
 + (instancetype)sharedInstance;
 @end
 
+@protocol BBObserverDelegate <NSObject>
+-(void)observer:(id)arg1 addBulletin:(id)arg2 forFeed:(NSInteger)arg3 playLightsAndSirens:(BOOL)arg4 withReply:(/*^block*/id)arg5;
+-(void)observer:(id)arg1 addBulletin:(id)arg2 forFeed:(NSUInteger)arg3;
+-(void)observer:(id)arg1 modifyBulletin:(id)arg2 forFeed:(NSUInteger)arg3;
+-(void)observer:(id)arg1 modifyBulletin:(id)arg2;
+-(void)observer:(id)arg1 removeBulletin:(id)arg2 forFeed:(NSUInteger)arg3;
+-(void)observer:(id)arg1 removeBulletin:(id)arg2;
+@end
+
+@interface SBLockScreenNotificationListController : NSObject  <BBObserverDelegate>
+@end
+
 @interface SBBulletinBannerController : NSObject
 + (instancetype)sharedInstance;
 - (void)modallyPresentBannerForBulletin:(BBBulletin *)bulletin action:(BBAction *)action;
@@ -348,6 +389,21 @@ extern void BBDataProviderSetApplicationBadgeString(BBDataProvider *dataProvider
 - (void)layoutSubviews;
 - (id)initWithFrame:(struct CGRect)arg1;
 - (void)setRelevanceDate:(NSDate *)relevanceDate;
+@end
+
+@interface NCBulletinNotificationSource : NSObject
+-(BBObserver*)observer;
+@end
+
+@interface SBNCNotificationDispatcher : NSObject
+-(NCBulletinNotificationSource*)notificationSource;
+@end
+
+@interface UIApplication ()
+- (id)_mainScene;
+- (id)_keyWindowForScreen:(id)arg1;
+- (SBApplication*) _accessibilityFrontMostApplication;
+- (SBNCNotificationDispatcher*)notificationDispatcher;
 @end
 
 @interface SBDefaultBannerView : UIView {
@@ -591,4 +647,43 @@ __attribute__((weak_import)) @interface BBSectionIcon: NSObject
 - (void)setVibrantSettings:(id)arg1;
 - (long long)state;
 
+@end
+
+@interface NCNotificationRequest : NSObject
+@property (nonatomic,copy,readonly) NSString* sectionIdentifier;
+@property (nonatomic,readonly) BBBulletin* bulletin;
+@end
+
+@interface SBDashBoardModalView : UIView
+-(void)setSecondaryActionButtonText:(NSString *)arg1;
+@end
+
+@interface UIInterfaceAction : NSObject
++(id)actionWithTitle:(id)arg1 type:(long long)arg2 handler:(/*^block*/id)arg3 ;
+-(id)handler;
+@end
+
+@interface _NCNotificationViewControllerView : UIView
+-(id)contentView;
+@end
+
+@interface NCNotificationLongLookView : UIView
+-(void)setInterfaceActions:(NSArray *)arg1;
+-(NSArray *)interfaceActions;
+-(UIView *)customContentView;
+-(void)setCustomContentSize:(CGSize)arg1;
+@end
+
+@interface NCNotificationLongLookViewController : UIViewController
+@property (nonatomic,retain) NCNotificationRequest * notificationRequest;
+-(void)_handleCloseButton:(id)arg1 ;
+@end
+
+@interface SBDashBoardFullscreenNotificationViewController : UIViewController
+@property (nonatomic,readonly) NCNotificationRequest* notificationRequest;
+-(void)handlePrimaryActionForView:(id)arg1;
+@end
+
+@interface NCNotificationContentView : UIView
+-(void)setAccessoryView:(UIView *)arg1 ;
 @end
