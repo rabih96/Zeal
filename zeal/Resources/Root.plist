@@ -20,7 +20,7 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
-			<false/>
+			<true/>
 			<key>defaults</key>
 			<string>com.rabih96.ZealPrefs</string>
 			<key>key</key>
@@ -63,7 +63,19 @@
 			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>General Settings :</string>
+			<key>footerText</key>
+			<string>This feature is still experimental it might not work most of the time.</string>
 		</dict>
+		<!--dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>CustomPercentageList</string>
+			<key>label</key>
+			<string>Custom Percentage Trigger</string>
+			<key>icon</key>
+			<string></string>
+		</dict-->
 		<dict>
 		    <key>cell</key>
 		    <string>PSLinkCell</string>
@@ -117,27 +129,13 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
-			<true/>
+			<false/>
 			<key>defaults</key>
 			<string>com.rabih96.ZealPrefs</string>
 			<key>key</key>
 			<string>notifyWhenFull</string>
 			<key>label</key>
 			<string>Notify When Battery is Full</string>
-		</dict>
-		<dict>
-			<key>PostNotification</key>
-			<string>com.rabih96.ZealPrefs.Changed</string>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<false/>
-			<key>defaults</key>
-			<string>com.rabih96.ZealPrefs</string>
-			<key>key</key>
-			<string>calculatedBattery</string>
-			<key>label</key>
-			<string>Use Calculated Percentage</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -163,20 +161,6 @@
 			<key>min</key>
 			<integer>3</integer>
 		</dict>
-		<!--dict>
-			<key>PostNotification</key>
-			<string>com.rabih96.ZealPrefs.Changed</string>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<false/>
-			<key>defaults</key>
-			<string>com.rabih96.ZealPrefs</string>
-			<key>key</key>
-			<string>darkMode</string>
-			<key>label</key>
-			<string>Dark Mode</string>
-		</dict-->
 		<dict>
 			<key>PostNotification</key>
 			<string>com.rabih96.ZealPrefs.Changed</string>
@@ -189,7 +173,7 @@
 			<key>key</key>
 			<string>estimateTimeLeft</string>
 			<key>label</key>
-			<string>Estimate Time Left</string>
+			<string>Estimate Time Left To Charge</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -231,7 +215,7 @@
 			<key>alignment</key>
 			<string>center</string>
 			<key>label</key>
-			<string>Schedule DarkMode</string>
+			<string>Schedule Dark Mode</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -278,38 +262,42 @@
 			<string>Credits :</string>
 		</dict>
 		<dict>
-			<key>action</key>
-			<string>followMe:</string>
-			<key>cell</key>
-			<string>PSButtonCell</string>
-			<key>alignment</key>
-			<string>center</string>
-			<key>label</key>
-			<string>Follow @rabih96</string>
-			<key>icon</key>
+			<key>cellClass</key>
+			<string>ZDevCell</string>
+			<key>height</key>
+			<integer>60</integer>
+			<key>twitterName</key>
+			<string>rabih96</string>
+			<key>name</key>
+			<string>Rabih</string>
+			<key>jobTitle</key>
+			<string>Developer</string>
+			<key>devImage</key>
 			<string>rabih96.png</string>
 		</dict>
 		<dict>
-			<key>action</key>
-			<string>followNotMe:</string>
-			<key>cell</key>
-			<string>PSButtonCell</string>
-			<key>alignment</key>
-			<string>center</string>
-			<key>label</key>
-			<string>Follow @StijnDV</string>
-			<key>icon</key>
-			<string>stijin.png</string>
+			<key>cellClass</key>
+			<string>ZDevCell</string>
+			<key>height</key>
+			<integer>60</integer>
+			<key>twitterName</key>
+			<string>StijnDV</string>
+			<key>name</key>
+			<string>Stijn</string>
+			<key>jobTitle</key>
+			<string>Designer</string>
+			<key>devImage</key>
+			<string>stijn.png</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSTitleValueCell</string>
 			<key>height</key>
-			<integer>30</integer>
+			<integer>40</integer>
 			<key>alignment</key>
 			<integer>2</integer>
 			<key>label</key>
-			<string>Zeal ©2016 Rabih M. and Stijn</string>
+			<string>Zeal ©2016</string>
 		</dict>
 	</array>
 	<key>title</key>

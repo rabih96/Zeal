@@ -5,23 +5,17 @@
 #import <CaptainHook/CaptainHook.h>
 #import <Flipswitch/Flipswitch.h>
 #import <substrate.h>
-#include <dlfcn.h>
+#import <dlfcn.h>
 #import <BackBoardServices/BKSDisplayBrightness.h>
 #import <SpringBoard/SpringBoard.h>
 #import <SpringBoard/SBApplication.h>
-#include "objc/runtime.h"
-#include "notify.h"
-
+#import "objc/runtime.h"
+#import "notify.h"
 #import "UNUserNotificationCenter.h"
 
-#include <IOKit/IOKitLib.h>
-#include <IOKit/IOPowerSources.h>
-#include <IOKit/IOPSKeys.h>
-#include <IOKit/IOPM.h>
-
-#define SETBOOL(NAME,KEY,BOOL) (NAME) 	= ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] boolValue] : (BOOL))
-#define SETINT(NAME,KEY,INT) (NAME) 	= ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] integerValue] : (INT))
-#define SETTEXT(NAME,KEY) (NAME) 		= ([prefs objectForKey:@(KEY)] ? [prefs objectForKey:@(KEY)] : (NAME))
+#define SETBOOL(NAME,KEY,BOOL) (NAME) 				= ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] boolValue] : (BOOL))
+#define SETINT(NAME,KEY,INT) (NAME) 				= ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] integerValue] : (INT))
+#define SETTEXT(NAME,KEY) (NAME) 					= ([prefs objectForKey:@(KEY)] ? [prefs objectForKey:@(KEY)] : (NAME))
 
 #define SYSTEM_VERSION_EQUAL_TO(v)                  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
 #define SYSTEM_VERSION_GREATER_THAN(v)              ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
@@ -29,22 +23,40 @@
 #define SYSTEM_VERSION_LESS_THAN(v)                 ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
 #define SYSTEM_VERSION_LESS_THAN_OR_EQUAL_TO(v)     ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedDescending)
 
-#define springBoard 					[NSClassFromString(@"SpringBoard") sharedApplication]
-#define powerSaver 						[NSClassFromString(@"_CDBatterySaver") batterySaver]
-#define kBounds 						[[UIScreen mainScreen] bounds]
-#define kSettingsPath 					[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
-#define PreferencesChangedNotification	"com.rabih96.ZealPrefs.Changed"
-#define kRemoveBanner					"com.rabih96.ZealPrefs.Dismiss"
-#define kPowerSaverMde					"com.rabih96.ZealPrefs.PSM"
-#define kChangeBrightness				"com.rabih96.ZealPrefs.Brightness"
-#define kShowAlert						"com.rabih96.ZealPrefs.showAlert"
+#define IS_IPHONE 									(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
+#define IS_RETINA 									([[UIScreen mainScreen] scale] >= 2.0)
 
-#define AppIconSize 45
-#define AppSpacing 	15
-#define AppsPerRow 	5
+#define SCREEN_WIDTH 								([[UIScreen mainScreen] bounds].size.width)
+#define SCREEN_HEIGHT 								([[UIScreen mainScreen] bounds].size.height)
+#define SCREEN_MAX_LENGTH							(MAX(SCREEN_WIDTH, SCREEN_HEIGHT))
+#define SCREEN_MIN_LENGTH 							(MIN(SCREEN_WIDTH, SCREEN_HEIGHT))
+#define IS_ZOOMED 									(IS_IPHONE && SCREEN_MAX_LENGTH == 736.0)
 
-#define kOBJCIPCServer1 @"com.rabih96.Zeal.orientation1"
-#define kOBJCIPCServer2 @"com.rabih96.Zeal.orientation2"
+#define IS_IPHONE_4_OR_LESS 						(IS_IPHONE && SCREEN_MAX_LENGTH < 568.0)
+#define IS_IPHONE_5 								(IS_IPHONE && SCREEN_MAX_LENGTH == 568.0)
+#define IS_IPHONE_6 								(IS_IPHONE && SCREEN_MAX_LENGTH == 667.0)
+#define IS_IPHONE_6P								(IS_IPHONE && SCREEN_MAX_LENGTH == 736.0)
+
+#define springBoard 								[NSClassFromString(@"SpringBoard") sharedApplication]
+#define powerSaver 									[NSClassFromString(@"_CDBatterySaver") batterySaver]
+#define kBounds 									[[UIScreen mainScreen] bounds]
+#define kSettingsPath 								[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
+#define PreferencesChangedNotification				"com.rabih96.ZealPrefs.Changed"
+#define kRemoveBanner								"com.rabih96.ZealPrefs.Dismiss"
+#define kPowerSaverMde								"com.rabih96.ZealPrefs.PSM"
+#define kChangeBrightness							"com.rabih96.ZealPrefs.Brightness"
+#define kShowAlert									"com.rabih96.ZealPrefs.showAlert"
+
+#define AppIconSize 								45
+#define AppSpacing 									15
+#define AppsPerRow 									5
+#define kBannerViewWidth  							!IS_IPHONE_5 ? 300 : 340
+
+#define kOBJCIPCServer1 							@"com.rabih96.Zeal.orientation1"
+#define kOBJCIPCServer2 							@"com.rabih96.Zeal.orientation2"
+
+#define RGBA(R,G,B,A) 								[UIColor colorWithRed:R/255.0f green:G/255.0f blue:B/255.0f alpha:A]
+#define BETWEEN(value, min, max) 					(value <= max && value >= min)
 
 static BKSDisplayBrightnessTransactionRef _transaction;
 
@@ -57,6 +69,14 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 #if defined(__cplusplus)
 }
 #endif
+
+static CGFloat calculateXPositionForAppNumber(int appNumber, int width, int appPerRow){
+	float spacing = (width - (AppIconSize*appPerRow) - (AppSpacing*2))/(appPerRow-1);
+	int pageNumber = floor((appNumber-1)/appPerRow);
+	int pageWidth = pageNumber*width;
+	if((appNumber-1) % appPerRow == 0)	return pageWidth + AppSpacing;
+	else	return pageWidth + AppSpacing + ((appNumber-(pageNumber*appPerRow))-1)*(AppIconSize+spacing);
+}
 
 @interface PLBatteryPropertiesEntry : NSObject
 + (id)batteryPropertiesEntry;
@@ -126,28 +146,23 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 @end
 
 @interface SBStatusBarStateAggregator
-
 + (id)sharedInstance;
 - (void)_updateBatteryItems;
 - (void)showThaAlert;
 - (void)loadSettings;
-
 @end
 
 @class LAEvent;
 @protocol LAListener, LAEventDataSource;
 
 @interface LAActivator : NSObject
-
 + (LAActivator *)sharedInstance;
 - (void)registerListener:(id<LAListener>)listener forName:(NSString *)name;
-
 - (void)_updateBatteryItems;
 - (BOOL)isOnAC;
 - (int)batteryCapacityAsPercentage;
 - (int)displayBatteryCapacityAsPercentage;
 - (int)curvedBatteryCapacityAsPercentage;
-
 @end
 
 
@@ -180,7 +195,6 @@ CFNotificationCenterRef CFNotificationCenterGetDistributedCenter(void);
 @interface UIStatusBarTimeItemView : UIStatusBarItemView{
 	NSString *_timeString;
 }
-
 -(int)textStyle;
 -(BOOL)cachesImage;
 -(id)contentsImage;
@@ -263,23 +277,6 @@ extern void BBDataProviderSetApplicationBadgeString(BBDataProvider *dataProvider
 @end
 
 @interface BBBulletin : NSObject
-@property (copy, nonatomic) NSString *bulletinID;
-@property (copy, nonatomic) NSString *sectionID;
-@property (copy, nonatomic) NSString *recordID;
-@property (copy, nonatomic) NSString *publisherBulletinID;
-@property (copy, nonatomic) NSString *title;
-@property (copy, nonatomic) NSString *subtitle;
-@property (copy, nonatomic) NSString *message;
-@property (retain, nonatomic) NSDictionary *context;
-@property (copy, nonatomic) NSDictionary *actions;
-@property (retain, nonatomic) NSDictionary *supplementaryActionsByLayout;
-@property (copy, nonatomic) BBAction *defaultAction;
-@property (copy, nonatomic) BBAction *alternateAction;
-@property (copy, nonatomic) BBAction *acknowledgeAction;
-@property (copy, nonatomic) BBAction *expireAction;
-@property (copy, nonatomic) BBAction *raiseAction;
-@property (copy, nonatomic) BBAction *snoozeAction;
-@property (copy, nonatomic) NSArray *buttons;
 - (NSArray *)_allActions;
 - (NSArray *)_allSupplementaryActions;
 - (NSArray *)supplementaryActions;
@@ -475,18 +472,6 @@ extern void BBDataProviderSetApplicationBadgeString(BBDataProvider *dataProvider
 - (CGFloat)_preferredPullDownViewHeight;
 @end
 
-/*
-@interface CKMediaObject : NSObject
-@property (copy, nonatomic, readonly) NSString *transferGUID;
-@property (copy, nonatomic, readonly) NSURL *fileURL;
-@end
-
-@interface CKMediaObjectManager : NSObject
-+ (instancetype)sharedInstance;
-- (CKMediaObject *)mediaObjectWithFileURL:(NSURL *)url filename:(NSString *)filename transcoderUserInfo:(NSDictionary *)transcoderUserInfo;
-- (CKMediaObject *)mediaObjectWithData:(NSData *)data UTIType:(NSString *)type filename:(NSString *)filename transcoderUserInfo:(NSDictionary *)transcoderUserInfo;
-@end*/
-
 @protocol NCInteractiveNotificationHostInterface
 @required
 - (void)_dismissWithContext:(NSDictionary *)context;
@@ -661,6 +646,14 @@ __attribute__((weak_import)) @interface BBSectionIcon: NSObject
 @interface UIInterfaceAction : NSObject
 +(id)actionWithTitle:(id)arg1 type:(long long)arg2 handler:(/*^block*/id)arg3 ;
 -(id)handler;
+-(void)setHandler:(id)arg1;
+-(void)setType:(long long)arg1;
+-(UIView *)customContentView;
++ (id)actionWithCustomContentViewController:(id)arg1;
++ (id)actionWithCustomContentView:(id)arg1;
+-(void)_setIsFocused:(BOOL)arg1 ;
+-(void)_setIsPreferred:(BOOL)arg1 ;
+-(void)setEnabled:(BOOL)arg1 ;
 @end
 
 @interface _NCNotificationViewControllerView : UIView
@@ -685,5 +678,25 @@ __attribute__((weak_import)) @interface BBSectionIcon: NSObject
 @end
 
 @interface NCNotificationContentView : UIView
+-(id)initWithStyle:(long long)arg1 ;
+-(void)setAdjustsFontForContentSizeCategory:(BOOL)arg1 ;
+-(BOOL)adjustsFontForContentSizeCategory;
+-(UIView *)accessoryView;
 -(void)setAccessoryView:(UIView *)arg1 ;
+-(UIImage *)thumbnail;
+-(void)setThumbnail:(UIImage *)arg1 ;
+-(NSString *)secondaryText;
+-(void)setPrimaryText:(NSString *)arg1 ;
+-(void)setSecondaryText:(NSString *)arg1 ;
+-(void)setHintText:(NSString *)arg1 ;
+-(void)setMessageNumberOfLines:(unsigned long long)arg1 ;
+-(BOOL)adjustForContentSizeCategoryChange;
+-(void)setPreferredContentSizeCategory:(NSString *)arg1 ;
+-(NSString *)primarySubtitleText;
+-(void)setPrimarySubtitleText:(NSString *)arg1 ;
+-(void)setThumbnailViewContentMode:(long long)arg1 ;
+-(long long)thumbnailViewContentMode;
+-(NSString *)hintText;
+-(BOOL)showAdditionalMessageLines;
+-(void)setShowAdditionalMessageLines:(BOOL)arg1 ;
 @end

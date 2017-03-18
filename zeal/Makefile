@@ -1,12 +1,12 @@
-TARGET = :8.1
+SYSROOT = $(THEOS)/sdks/iPhoneOS9.3.sdk
 
 include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = Zeal
-Zeal_FILES = ZealRootListController.m ZealHeaderView.m ZStepperCell.m ZSegmentCell.mm
+Zeal_FILES = ZealRootListController.m ZealHeaderView.m ZStepperCell.m ZSegmentCell.mm ZDevCell.m
 Zeal_INSTALL_PATH = /Library/PreferenceBundles
-Zeal_CFLAGS = -w
-Zeal_FRAMEWORKS = UIKit
+Zeal_CFLAGS = #-w
+Zeal_FRAMEWORKS = UIKit Twitter
 Zeal_PRIVATE_FRAMEWORKS = Preferences
 
 include $(THEOS_MAKE_PATH)/bundle.mk

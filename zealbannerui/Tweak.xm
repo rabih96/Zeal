@@ -2,6 +2,21 @@
 #import "ChatKit.h"
 #import <Flipswitch/Flipswitch.h>
 
+#define springBoard 					[NSClassFromString(@"SpringBoard") sharedApplication]
+#define powerSaver 						[NSClassFromString(@"_CDBatterySaver") batterySaver]
+#define kBounds 						[[UIScreen mainScreen] bounds]
+#define kSettingsPath 					[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
+#define kColorBannerSettingsPath 		[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.golddavid.colorbanners.plist"]
+#define PreferencesChangedNotification	"com.rabih96.ZealPrefs.Changed"
+#define kRemoveBanner					"com.rabih96.ZealPrefs.Dismiss"
+#define kPowerSaverMde					"com.rabih96.ZealPrefs.PSM"
+#define kChangeBrightness				"com.rabih96.ZealPrefs.Brightness"
+
+#define AppIconSize 45
+#define AppSpacing 	15
+#define SETINT(NAME,KEY,INT) 			(NAME) = ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] integerValue] : (INT))
+#define Alert(TITLE,MSG) 				[[[UIAlertView alloc] initWithTitle:(TITLE) message:(MSG) delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show]
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -9,6 +24,10 @@ extern "C" {
 #if defined(__cplusplus)
 }
 #endif
+
+static inline NSString* NSStringFromCGFloat(CGFloat value){
+	return [NSString stringWithFormat:@"%f", value];
+}
 
 @interface SpringBoard : UIApplication
 -(void)adjustBrightness:(CGFloat)brightness isTracking:(BOOL)isTracking;
@@ -24,24 +43,6 @@ extern "C" {
 - (BOOL)setPowerMode:(int)arg1 error:(id*)arg2;
 @end
 
-#define springBoard 					[NSClassFromString(@"SpringBoard") sharedApplication]
-#define powerSaver 						[NSClassFromString(@"_CDBatterySaver") batterySaver]
-#define kBounds 						[[UIScreen mainScreen] bounds]
-#define kSettingsPath 					[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
-#define kColorBannerSettingsPath 		[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.golddavid.colorbanners.plist"]
-#define PreferencesChangedNotification	"com.rabih96.ZealPrefs.Changed"
-#define kRemoveBanner					"com.rabih96.ZealPrefs.Dismiss"
-#define kPowerSaverMde					"com.rabih96.ZealPrefs.PSM"
-#define kChangeBrightness				"com.rabih96.ZealPrefs.Brightness"
-
-#define AppIconSize 45
-#define AppSpacing 	15
-#define SETINT(NAME,KEY,INT) (NAME) = ([prefs objectForKey:@(KEY)] ? [[prefs objectForKey:@(KEY)] integerValue] : (INT))
-
-static inline NSString* NSStringFromCGFloat(CGFloat value){
-	return [NSString stringWithFormat:@"%f", value];
-}
-
 %group NotificationHook
 
 static CGFloat calculateXPositionForAppNumber(int appNumber, int width, int appPerRow){
@@ -51,8 +52,6 @@ static CGFloat calculateXPositionForAppNumber(int appNumber, int width, int appP
 	if((appNumber-1) % appPerRow == 0)	return pageWidth + AppSpacing;
 	else	return pageWidth + AppSpacing + ((appNumber-(pageNumber*appPerRow))-1)*(AppIconSize+spacing);
 }
-
-#define Alert(TITLE,MSG) 		[[[UIAlertView alloc] initWithTitle:(TITLE) message:(MSG) delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show]
 	
 UIButton *closeButton 		= nil;
 UIButton *powerSavingButton = nil;

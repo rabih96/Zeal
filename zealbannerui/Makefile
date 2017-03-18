@@ -1,3 +1,5 @@
+SYSROOT = $(THEOS)/sdks/iPhoneOS9.3.sdk
+
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = ZealBannerUI

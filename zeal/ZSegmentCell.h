@@ -5,7 +5,6 @@
 
 @interface ZSegmentCell : PSTableCell {
     UISegmentedControl *segmentedControl;
-
     //NSArray *titleArray; may be added in future updates
     NSArray *imagesArray;
 }

@@ -47,12 +47,17 @@ typedef void(^CompletionBlock)(void);
 	UIScrollView *flipSwitchScrollView;
 	BOOL darkMode;
 	int appsPerRow;
+	int kAlertWidth;
+	int kAlertFontSize; //10-12
+	int kAlertTextSpacing; //170-180
 }
 
 @property (nonatomic) BOOL animate;
 @property (nonatomic) BOOL userInteraction;
 @property (nonatomic, strong) CompletionBlock completion;
 
++(id)sharedManager;
+-(id)initWithData:(NSDictionary *)data andOrientation:(UIInterfaceOrientation)orientation;
 -(void)adjustViewForOrientation:(UIInterfaceOrientation)orientation animated:(BOOL)animateOrient;
 -(void)_calculateRender;
 -(void)_createAlert;

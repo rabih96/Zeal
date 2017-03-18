@@ -11,7 +11,7 @@
 @implementation ZSegmentCell
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier specifier:(PSSpecifier *)specifier{
-    self = [super initWithStyle:UITableViewCellStyleDefault reuseIdentifier:reuseIdentifier specifier:specifier];
+	self = [super initWithStyle:UITableViewCellStyleDefault reuseIdentifier:reuseIdentifier specifier:specifier];
 
 	if (self)
 	{
@@ -34,6 +34,7 @@
 		segmentedControl.selectedSegmentIndex = bannerModeKey ? [bannerModeKey intValue] : 0;
 		[segmentedControl setDividerImage:[UIImage alloc] forLeftSegmentState:UIControlStateNormal rightSegmentState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
 		segmentedControl.layer.borderWidth = 0;
+		segmentedControl.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 		segmentedControl.tintColor = [UIColor colorWithRed:0.45 green:0.99 blue:0.69 alpha:1.0];
 		[self.contentView addSubview:segmentedControl];        
 		[segmentedControl release]; 

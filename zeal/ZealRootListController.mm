@@ -1,7 +1,5 @@
 #include "ZealRootListController.h"
-
-#define kSettingsPath 					[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.rabih96.ZealPrefs.plist"]
-#define PreferencesChangedNotification	@"com.rabih96.ZealPrefs.Changed"
+#include "../UIAlertView+Blocks.h"
 
 @implementation ZealRootListController
 
@@ -13,11 +11,9 @@
 	return _specifiers;
 }
 
-- (void)respring {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wdeprecated-declarations" 
+- (void)respring
+{
 	system("killall backboardd");
-	#pragma clang diagnostic pop
 }
 
 -(id) readPreferenceValue:(PSSpecifier*)specifier {
@@ -55,7 +51,7 @@
 	return item;
 }
 
-- (void)followMe:(id)specifier {
+/*- (void)followMe:(id)specifier {
 	if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"tweetbot:"]]) {
 		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"tweetbot:///user_profile/rabih96"]];
 	}
@@ -97,7 +93,7 @@
 	else {
 		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://mobile.twitter.com/StijnDV"]];
 	}
-}
+}*/
 
 - (void)shareTapped {
 	NSString *text = @"I love #Zeal by @rabih96 and @StijnDV";
@@ -111,7 +107,7 @@
 - (void)pickThaTime {
 	NSDictionary *tweakSettings = [NSDictionary dictionaryWithContentsOfFile:kSettingsPath];
 
-	UIAlertController *timeAlertController = [UIAlertController alertControllerWithTitle:@"Schedule Dark Mode" message:@"From - Till" preferredStyle:UIAlertControllerStyleAlert];
+	UIAlertController *timeAlertController = [UIAlertController alertControllerWithTitle:nil message:@"From - Till" preferredStyle:UIAlertControllerStyleAlert];
 
 	UIViewController *datesViewController = [[UIViewController alloc] init];
 	//UIView *controllerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 270, 130)];
